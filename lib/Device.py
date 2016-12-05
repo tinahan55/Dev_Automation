@@ -17,24 +17,18 @@ class Device_Tool(object):
         self.logger = logging.getLogger('%s.Device_Tool'%(self.logname))
         self.logger.info('creating the sub log for Device_Tool')
         self.target = self.device_connect()
+        self.target_response = ""
+
 
     def device_connect(self):
+        self.target_response =""
         if self.connecttype == "telnet":
             telnet_console =Telnet_Console(self.ipaddress,self.port,self.username,self.password,self.logname)
-            #kill user
-            killresult = telnet_console.kill_User("router")
-            self.logger.info("[device_connect]Kill User (Router):%s"%(killresult))
-            if killresult== False:
-                killresult = telnet_console.kill_User("server")
-                self.logger.info("[device_connect]Kill User (server):%s"%(killresult))
-            if killresult ==True:
-                #user login
-                self.logger.info('[device_connect] login start.')
-                result = telnet_console.login()
-                if result ==True:
-                    return telnet_console
-                else:
-                    return None
+            result = telnet_console.login()
+            if result ==True:
+                return telnet_console
+            else:
+                return None
 
         elif self.connecttype == "ssh":
             ssh_console = SSHConnect(self.ipaddress,self.username,self.password,self.logname)
@@ -51,14 +45,13 @@ class Device_Tool(object):
         if self.connecttype == "telnet":
             if self.target!=None:
                 commandresult = self.target.send_command(command,timeout)
-                commandresponse = self.target .telnetresult
-
+                self.target_response = self.target.telnetresult
 
         elif self.connecttype =="ssh":
             if self.target!=None:
                 commandresult = self.target.write_command(command,timeout)
-                commandresponse = self.target.sshresult
-        return commandresponse
+                self.target_response = self.target.sshresult
+        return commandresult
 
     def device_send_command_match(self,command,timeout,matchresult):
         timeout = 10
@@ -66,11 +59,26 @@ class Device_Tool(object):
         if self.connecttype == "telnet":
             if self.target!=None:
                 commandresult = self.target.send_command_match(command,timeout,matchresult)
+                self.target_response = self.target.telnetresult
+
 
         elif self.connecttype =="ssh":
             if self.target!=None:
                 commandresult = self.target.write_command_match(command,timeout,matchresult)
+                self.target_response = self.target.sshresult
+
         return commandresult
+
+
+    def device_reboot(self):
+        if self.device_send_command("reboot"):
+            time.sleep(120)
+            self.target =  self.device_connect()
+            if self.device_send_command_match("show version",5,"Lilee(.*) Ltd"):
+                return True
+            else:
+                return False
+
 
 
 def set_log(filename,loggername):
@@ -81,7 +89,6 @@ def set_log(filename,loggername):
     fh.setLevel(logging.INFO)
     fh.setFormatter(formatter)
     logger.addHandler(fh)
-
     console = logging.StreamHandler()
     console.setLevel(logging.DEBUG)
     console.setFormatter(formatter)
@@ -94,15 +101,19 @@ if __name__ == '__main__':
 
     telnet_device =Device_Tool("10.2.11.58",2041,"telnet","admin","admin","device_test")
 
-    commandresponse = telnet_device.device_send_command_match("show interface all",5,"maintenance 0(.*) up")
+    result = telnet_device.device_reboot()
 
-    logger.info(commandresponse)
+    logger.info("result :%s, response: %s"%(result,telnet_device.target_response))
+
+    #commandresponse = telnet_device.device_send_command_match("show interface all","lilee",5,"maintenance 0(.*) up")
+
+    #logger.info(commandresponse)
 
 
-    ssh_device =Device_Tool("10.2.52.51",2041,"ssh","admin","admin","device_test")
+    #ssh_device =Device_Tool("10.2.52.51",2041,"ssh","admin","admin","device_test")
 
-    commandresponse = ssh_device.device_send_command_match("show interface all",5,"maintenance 0(.*) up")
+    #result = ssh_device.device_reboot()
 
-    logger.info(commandresponse)
+    #logger.info("result :%s, response: %s"%(result,ssh_device.target_response))
 
 
