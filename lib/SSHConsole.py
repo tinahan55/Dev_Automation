@@ -14,7 +14,7 @@ class SSHConnect(object):
         self.password=password
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.sshresult = None
+        self.sshresult = ""
         self.IsConnect =False
         self.logger = logging.getLogger('%s.ssh'%(logname))
         self.logger.info('creating the sub log for SSHConnect')
@@ -22,6 +22,7 @@ class SSHConnect(object):
     def connect(self):
         try:
             self.ssh.connect(self.ipaddress, port=22, username=self.username, password= self.password, timeout=int(10))
+            self.sshresult = ""
             time.sleep(1)
             if(self.ssh):
                 self.IsConnect= True
@@ -80,14 +81,15 @@ class SSHConnect(object):
 
 
 
+
 if __name__ == '__main__':
-    sshconnect = SSHConnect("10.2.52.56")
+    sshconnect = SSHConnect("10.2.52.51")
     sshconnect.connect()
     if(sshconnect.IsConnect):
-        times = 200000
-        for k in range(0, times):
-            sshconnect.write_command("debug line cellular 0 atcmd \"AT!GSTATUS?\"")
-            sshconnect.write_command("debug line cellular 1 atcmd \"AT!GSTATUS?\"")
-            sshconnect.write_command("show gps detail")
-            time.sleep(10)
+        sshconnect.write_command("reboot",2)
+        time.sleep(120)
+        sshconnect.connect()
+        sshconnect.write_command("show version",2)
+
+
 
