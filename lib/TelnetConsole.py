@@ -16,6 +16,7 @@ class Telnet_Console(object):
         self.telnetresult = ""
         self.telnet = None
         self.IsConnect =False
+        self.telnet = telnetlib.Telnet()
         self.logger = logging.getLogger('%s.telnet'%(logname))
         self.logger.info('creating the sub log for telent')
 
@@ -27,14 +28,14 @@ class Telnet_Console(object):
                 time.sleep(2)
             self.telnet = telnetlib.Telnet(self.ipaddress,int(self.port), timeout=10)
             readstring = self.telnet.read_until('Welcome to Lilee Systems', timeout=10)
-            if len(readstring) ==0:
+            if 'Welcome to Lilee Systems' not in readstring:
                 self.IsConnect = False
             else:
+                self.telnet.write(("\n").encode('ascii'))
                 readstring = self.telnet.read_until(checkResponse, timeout=3)
-                if "localdomain" not in readstring:
+                if "localdomain" not in readstring or "bash" not in readstring:
                     self.telnet.write(("\x03" + "\n").encode('ascii'))
                     readstring = self.telnet.read_until("login:", timeout=30)
-                    print readstring
                     if "login" in readstring:
                        self.telnet.write((self.username + "\r").encode('ascii'))
                        readstring =self.telnet.read_until('Password:', timeout=3)
@@ -48,9 +49,7 @@ class Telnet_Console(object):
                        else:
                            self.IsConnect= False
 
-
-                    elif "localdomain" in readstring:
-                        print "login success"
+                    elif "localdomain" in readstring or "bash" in readstring :
                         self.IsConnect= True
                     else:
                         self.IsConnect= False
@@ -120,31 +119,63 @@ class Telnet_Console(object):
             self.logger.error("connect to router or server fail")
             return False
 
-    def send_command(self,command,timeout,checkResponse="localdomain",logflag = True):
-        try:
-            self.telnet.write((command + "\n").encode('ascii'))
-            self.telnetresult = self.telnet.read_until(checkResponse, timeout=int(timeout))
-            if logflag == True:
-                    self.logger.info(self.telnetresult)
-            if len(self.telnetresult)!=0:
-                return True
+    def __set_command_mode(self,mode):
+        mode_result = False
+        if mode == "shell":
+            self.telnet.write("\n")
+            readstring =self.telnet.read_until('bash', timeout=3)
+            if 'bash' not in readstring:
+                self.telnet.write(("diag shell\n").encode('ascii'))
+                readstring = self.telnet.read_until('Password', timeout=3)
+                if "Password" in readstring:
+                    self.telnet.write(("Unsupported!\n").encode('ascii'))
+                    readstring =self.telnet.read_until('bash', timeout=3)
+                    if 'bash' in readstring:
+                        mode_result =True
             else:
-                return False
+                mode_result = True
+
+        elif mode == "lilee":
+            self.telnet.write("\n")
+            readstring =self.telnet.read_until('localdomain', timeout=3)
+            if 'localdomain' not in readstring:
+                self.telnet.write("%s\n"%("exit"))
+                time.sleep(2)
+                readstring =self.telnet.read_until('localdomain', timeout=3)
+                if 'localdomain' in readstring:
+                    mode_result =True
+            else:
+                mode_result = True
+
+        return mode_result
+
+
+    def send_command(self,command,timeout,mode,checkResponse="localdomain",logflag = True):
+        try:
+            if self.__set_command_mode(mode):
+                self.telnet.write((command + "\n").encode('ascii'))
+                self.telnetresult = self.telnet.read_until(checkResponse, timeout=int(timeout))
+                if logflag == True:
+                        self.logger.info(self.telnetresult)
+                if len(self.telnetresult)!=0:
+                    return True
+                else:
+                    return False
         except :
               self.logger.info("telnet command error")
               return False
 
-    def send_command_match(self,command,timeout,result,checkResponse="localdomain"):
+    def send_command_match(self,command,timeout,mode,result,checkResponse="localdomain"):
          try:
-
-            self.telnet.write((command + "\n").encode('ascii'))
-            self.telnetresult = self.telnet.read_until(checkResponse, timeout=int(timeout))
-            p = re.compile(result)
-            match = p.search(self.telnetresult)
-            if (match == None):
-                return False
-            else:
-                return True
+            if self.__set_command_mode(mode):
+                self.telnet.write((command + "\n").encode('ascii'))
+                self.telnetresult = self.telnet.read_until(checkResponse, timeout=int(timeout))
+                p = re.compile(result)
+                match = p.search(self.telnetresult)
+                if (match == None):
+                    return False
+                else:
+                    return True
          except :
                 return False
 
@@ -158,7 +189,6 @@ def set_log(filename,loggername):
     fh.setLevel(logging.INFO)
     fh.setFormatter(formatter)
     logger.addHandler(fh)
-
     console = logging.StreamHandler()
     console.setLevel(logging.DEBUG)
     console.setFormatter(formatter)
@@ -176,6 +206,15 @@ if __name__ == '__main__':
   telnetconsole =Telnet_Console('10.2.11.58',2041,"admin","admin","telnet_test")
 
   telnetconsole.login()
+
+  if telnetconsole.IsConnect:
+      print telnetconsole.send_command_match("show version",2,"lilee","Lilee(.*) Ltd.","localdomain")
+      print telnetconsole.send_command("cat /proc/partitions",2,"shell","sda","bash")
+      print telnetconsole.send_command_match("show version",2,"lilee","Lilee(.*) Ltd.","localdomain")
+      print telnetconsole.send_command("cat /proc/partitions",2,"shell","sda","bash")
+
+
+
 
 
 

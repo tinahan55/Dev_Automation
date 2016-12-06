@@ -45,16 +45,53 @@ class SSHConnect(object):
             self.logger.error("[disconnect]ssh disconnect fail:%s "%(str(ex)))
             self.IsConnect =False
 
-    def write_command(self, command,timeout,logflag =True):
+    def __set_command_mode(self,remote_conn,mode):
+        mode_result = False
+        if mode == "shell":
+            remote_conn.send("\n")
+            time.sleep(2)
+            response_result = remote_conn.recv(5000)
+            print response_result
+            if "localdomain" in response_result:
+                remote_conn.send("%s\n"%("diag shell"))
+                time.sleep(2)
+                response_result = remote_conn.recv(5000)
+                print response_result
+                if "Password" in response_result:
+                    remote_conn.send("%s\n"%("Unsupported!"))
+                    time.sleep(2)
+                    response_result = remote_conn.recv(5000)
+                    if "bash" in response_result:
+                        mode_result =True
+            else:
+                mode_result = True
+
+        elif mode == "lilee":
+            remote_conn.send("\n")
+            response_result = remote_conn.recv(5000)
+            if "bash" in response_result:
+                remote_conn.send("%s\n"%("exit"))
+                time.sleep(2)
+                response_result = remote_conn.recv(5000)
+                if "localdomain" in response_result:
+                    mode_result =True
+            else:
+                mode_result = True
+
+        return mode_result
+
+    def write_command(self, command,timeout,mode,logflag =True):
         try:
+            mode_result = True
             if(self.ssh):
                 remote_conn = self.ssh.invoke_shell()
-                remote_conn.send("%s\n"%(command))
-                time.sleep(timeout)
-                self.sshresult = remote_conn.recv(5000)
-                if logflag == True:
-                    self.logger.info(self.sshresult)
-                return True
+                if self.__set_command_mode(remote_conn,mode):
+                    remote_conn.send("%s\n"%(command))
+                    time.sleep(timeout)
+                    self.sshresult = remote_conn.recv(5000)
+                    if logflag == True:
+                        self.logger.info(self.sshresult)
+                    return True
 
             else:
                 self.logging.info("Connection not opened.")
@@ -63,33 +100,56 @@ class SSHConnect(object):
             self.IsConnect =False
             self.ssh.close()
 
-    def write_command_match(self,command,timeout,result):
+    def write_command_match(self,command,timeout,mode,result):
          try:
             if(self.ssh):
                 remote_conn = self.ssh.invoke_shell()
-                remote_conn.send((command + "\n").encode('ascii'))
-                time.sleep(timeout)
-                self.sshresult = remote_conn.recv(5000)
-                p = re.compile(result)
-                match = p.search(self.sshresult)
-                if (match == None):
-                    return False
-                else:
-                    return True
+                if self.__set_command_mode(remote_conn,mode):
+                    remote_conn.send((command + "\n").encode('ascii'))
+                    time.sleep(timeout)
+                    self.sshresult = remote_conn.recv(5000)
+                    p = re.compile(result)
+                    match = p.search(self.sshresult)
+                    if (match == None):
+                        return False
+                    else:
+                        return True
          except :
                 return False
 
-
+def set_log(filename,loggername):
+    logger = logging.getLogger(loggername)
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh = logging.FileHandler(filename)
+    fh.setLevel(logging.INFO)
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+    console = logging.StreamHandler()
+    console.setLevel(logging.DEBUG)
+    console.setFormatter(formatter)
+    logger.addHandler(console)
+    return logger
 
 
 if __name__ == '__main__':
+
+
+    logger = set_log("sshconsole.log","SSHConnect")
+
+    logger.info("SSH")
+
+
     sshconnect = SSHConnect("10.2.52.51")
     sshconnect.connect()
     if(sshconnect.IsConnect):
-        sshconnect.write_command("reboot",2)
-        time.sleep(120)
-        sshconnect.connect()
-        sshconnect.write_command("show version",2)
+        #sshconnect.write_command("reboot",2)
+        #time.sleep(120)
+        #sshconnect.connect()
+        #sshconnect.write_command("show version",2,"lilee")
+        sshconnect.write_command("cat /proc/partitions",2,"shell")
+
+
 
 
 
