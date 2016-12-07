@@ -51,12 +51,10 @@ class SSHConnect(object):
             remote_conn.send("\n")
             time.sleep(2)
             response_result = remote_conn.recv(5000)
-            print response_result
             if "localdomain" in response_result:
                 remote_conn.send("%s\n"%("diag shell"))
                 time.sleep(2)
                 response_result = remote_conn.recv(5000)
-                print response_result
                 if "Password" in response_result:
                     remote_conn.send("%s\n"%("Unsupported!"))
                     time.sleep(2)

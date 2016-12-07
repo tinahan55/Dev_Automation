@@ -22,6 +22,7 @@ class Device_Tool(object):
         self.boot_image = ""
         self.build_image =""
 
+
     def device_connect(self):
         self.target_response =""
         if self.connecttype == "telnet":
@@ -46,6 +47,9 @@ class Device_Tool(object):
             command_mode ='lilee'
         return command_mode
 
+    def _escape_ansi(self,line):
+        ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
+        return ansi_escape.sub('', line).replace("\r","")
 
     def device_send_command(self,command):
         timeout = 10
@@ -55,12 +59,12 @@ class Device_Tool(object):
         if self.connecttype == "telnet":
             if self.target!=None:
                 commandresult = self.target.send_command(command,timeout,command_mode)
-                self.target_response = self.target.telnetresult
+                self.target_response = self._escape_ansi(self.target.telnetresult)
 
         elif self.connecttype =="ssh":
             if self.target!=None:
                 commandresult = self.target.write_command(command,timeout,command_mode)
-                self.target_response = self.target.sshresult
+                self.target_response = self._escape_ansi(self.target.sshresult)
         return commandresult
 
     def device_send_command_match(self,command,timeout,matchresult):
@@ -70,13 +74,13 @@ class Device_Tool(object):
         if self.connecttype == "telnet":
             if self.target!=None:
                 commandresult = self.target.send_command_match(command,timeout,command_mode,matchresult)
-                self.target_response = self.target.telnetresult
+                self.target_response = self._escape_ansi(self.target.telnetresult)
 
 
         elif self.connecttype =="ssh":
             if self.target!=None:
                 commandresult = self.target.write_command_match(command,timeout,command_mode,matchresult)
-                self.target_response = self.target.sshresult
+                self.target_response = self._escape_ansi(self.target.sshresult)
 
         return commandresult
 
@@ -89,8 +93,21 @@ class Device_Tool(object):
             else:
                 return False
 
+    def device_get_version(self):
+        biosmatchresult = self.device_send_command_match("dmidecode -t 0",5,"BIOS Information")
+        if biosmatchresult:
+            sub_match = re.findall('Version: (.*)\n', self.target_response)
+            if sub_match:
+                self.bios_version = sub_match[0]
 
-
+        versionmatchresult = self.device_send_command_match("show version",5,"Version")
+        if versionmatchresult:
+            sub_match = re.findall(r'LileeOS Version (.*)\n',self.target_response)
+            if sub_match:
+                self.build_image = sub_match[0]
+            sub_match = re.findall(r'Recovery Mode Image Version (.*)\n', self.target_response)
+            if sub_match:
+                self.boot_image=  sub_match[0]
 
 
 def set_log(filename,loggername):
@@ -111,24 +128,30 @@ if __name__ == '__main__':
 
     logger = set_log("Device.log","device_test")
 
-    telnet_device =Device_Tool("10.2.11.58",2041,"telnet","admin","admin","device_test")
+    #telnet_device =Device_Tool("10.2.11.58",2041,"telnet","admin","admin","device_test")
 
     #result = telnet_device.device_reboot()
 
     #logger.info("result :%s, response: %s"%(result,telnet_device.target_response))
 
-    print telnet_device.device_send_command_match("show interface all",5,"maintenance 0(.*) up")
+    #print telnet_device.device_send_command_match("show interface all",5,"maintenance 0(.*) up")
 
-    print telnet_device.device_send_command_match("cat /proc/partitions",5,"sda")
+    #print telnet_device.device_send_command_match("cat /proc/partitions",5,"sda")
+
+    #device =Device_Tool("10.2.52.51",0,"ssh","admin","admin","device_test")
+
+    device =Device_Tool("10.2.11.58",2045,"telnet","admin","admin","device_test")
+
+    if device:
+        device.device_get_version()
+        print device.bios_version
+        print device.boot_image
+        print device.build_image
 
 
 
-    ssh_device =Device_Tool("10.2.52.51",2041,"ssh","admin","admin","device_test")
 
-    #result = ssh_device.device_reboot()
 
-    print ssh_device.device_send_command_match("show interface all",5,"maintenance 0(.*) up")
-    print ssh_device.device_send_command_match("cat /proc/partitions",5,"sda")
 
 
 
