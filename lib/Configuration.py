@@ -12,9 +12,10 @@ class Profile(object):
         commandlist = list()
         commandlist.append("create wifi-profile \"%s\""%(profile_name))
         commandlist.append("config wifi-profile \"%s\" ssid \"%s\""%(profile_name,ssid))
-        commandlist.append("config wifi-profile \"%s\" authentication key-management \"%s\""%(profile_name,key_type))
-        commandlist.append("config wifi-profile \"%s\" authentication key-management wpa-version \"%s\""%(profile_name,wpa_version))
-        commandlist.append("config wifi-profile \"%s\" authentication wpa-psk ascii \"%s\""%(profile_name,wpa_key))
+        if key_type !="":
+            commandlist.append("config wifi-profile \"%s\" authentication key-management \"%s\""%(profile_name,key_type))
+            commandlist.append("config wifi-profile \"%s\" authentication wpa-version \"%s\""%(profile_name,wpa_version))
+            commandlist.append("config wifi-profile \"%s\" authentication wpa-psk ascii \"%s\""%(profile_name,wpa_key))
         return commandlist
 
 
@@ -37,7 +38,7 @@ class Interface(object):
         commandlist.append("config interface wlan %s profile \"%s\""%(wifi_index,profile_name))
         if ip_mode =="static":
             commandlist.append("config interface wlan %s ip address %s netmask %s"%(wifi_index,ipaddress,netmask))
-        elif ip_mode =="dhcp'":
+        elif ip_mode =="dhcp":
             commandlist.append("config interface wlan %s ip address dhcp"%(wifi_index))
         commandlist.append("config interface wlan %s enable"%(wifi_index))
         return commandlist

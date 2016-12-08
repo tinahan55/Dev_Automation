@@ -4,10 +4,14 @@ from time import gmtime, strftime
 
 
 def set_log(filename,loggername):
+    logpath = os.path.join(os.getcwd(), 'log')
+    if not os.path.exists(logpath):
+        os.makedirs(logpath)
+    filepath = os.path.join(logpath, filename)
     logger = logging.getLogger(loggername)
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh = logging.FileHandler(filename)
+    fh = logging.FileHandler(filepath)
     fh.setLevel(logging.INFO)
     fh.setFormatter(formatter)
     logger.addHandler(fh)

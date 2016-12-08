@@ -30,10 +30,12 @@ def Pretesting_Cellular(device):
     device.device_set_configs(configlist)
 
     checkitem ="Pretesting_Cellular"
-    checkcommandlist = ["show cellular-profile %s"%(profile_name),"show interface all","show sim-management current-status"
+    checkcommandlist = ["show cellular-profile %s"%(profile_name),"show platform led","show interface all","show interface dialer %s detail"%(dialer_index),"show sim-management current-status"
         ,"ping -I %s -c5 8.8.8.8"%(cellular_usb_index)]
-    checkitemlist = ["Line Index : %s"%(cellular_index),"dialer %s (.*) up"%(dialer_index)
-        ,"dialer %s (.*) %s (.*)"%(dialer_index,dialer_carrier),"64 bytes from 8.8.8.8: icmp_seq=5 (.*)"]
+
+    checkitemlist = ["Line Index : %s"%(cellular_index),"LTE%s (.*) green"%(cellular_index),"dialer %s (.*) up"%(dialer_index)
+       ,"Operational : up | MTU : 1500","dialer %s (.*) %s (.*)"%(dialer_index,dialer_carrier),"64 bytes from 8.8.8.8: icmp_seq=5 (.*)"]
+
     logger.info("[%s]Starting"%(checkitem))
     for index,value in enumerate(checkcommandlist):
         checkmatch = checkitemlist[index]
@@ -42,12 +44,60 @@ def Pretesting_Cellular(device):
 
 def Pretesting_Wifi(device):
     configlist = list()
-    profile_name ="ap-profile"
-    ssid_name = "auto-testing"
-    wlan_index = 0
+    ap_profile_name ="ap-profile"
+    sta_profile_name ="station-profile"
+    ap_ssid_name = "auto-testing"
+    sta_ssid_name ="SQA_Test-AC-5G"
+    wlan0_index = 0
+    wlan0_mode = "ap"
+    wlan0_ip_mode ="static"
+    wlan0_ip_address = "192.168.11.1"
+    wlan1_index = 1
+    wlan1_mode = "sta"
+    wlan1_ip_mode="dhcp"
     key_type = "wpa-psk"
     wpa_version = "auto"
     wpa_key="lilee~1234"
+
+
+    profile = Profile("Wifi")
+    configlist.extend(profile.get_wifi_profile(ap_profile_name,ap_ssid_name,key_type,wpa_version,wpa_key))
+
+    interface = Interface("wifi")
+    configlist.extend(interface.get_wifi_interface(wlan0_index,ap_profile_name,wlan0_mode,wlan0_ip_mode))
+    device.device_set_configs(configlist)
+
+    checkitem ="Pretesting_Wifi_AP"
+
+    checkcommandlist = ["show wifi-profile %s"%(ap_profile_name),"show platform led","show interface all"
+        ,"show interface wlan %s detail"%(wlan0_index)]
+    checkitemlist = ["SSID : %s | WPA PSK : %s"%(ap_ssid_name,wpa_key),"WLAN%s (.*) green"%(wlan0_index),"wlan %s (.*) %s (.*) up"%(wlan0_index,wlan0_ip_address)
+        ,"Operational : up | MTU : 1500"]
+
+    logger.info("[%s]Starting"%(checkitem))
+    for index,value in enumerate(checkcommandlist):
+        checkmatch = checkitemlist[index]
+        device_check_info(logger,device,checkitem,value,checkmatch)
+
+
+    profile = Profile("Wifi")
+    configlist.extend(profile.get_wifi_profile(sta_profile_name,sta_ssid_name,key_type,wpa_version,wpa_key))
+
+    interface = Interface("wifi")
+    configlist.extend(interface.get_wifi_interface(wlan1_index,sta_profile_name,wlan1_mode,wlan1_ip_mode))
+    device.device_set_configs(configlist)
+
+    checkitem ="Pretesting_Wifi_Station"
+
+    checkcommandlist = ["show wifi-profile %s"%(sta_profile_name),"show platform led","show interface all"
+        ,"show interface wlan %s detail"%(wlan0_index)]
+    checkitemlist = ["SSID : %s | WPA PSK : %s"%(ap_ssid_name,wpa_key),"WLAN%s (.*) green"%(wlan0_index),"wlan %s (.*) %s up"%(wlan0_index)
+        ,"Operational : up | MTU : 1500"]
+
+    logger.info("[%s]Starting"%(checkitem))
+    for index,value in enumerate(checkcommandlist):
+        checkmatch = checkitemlist[index]
+        device_check_info(logger,device,checkitem,value,checkmatch)
 
 
 
@@ -58,7 +108,6 @@ def set_log(filename,loggername):
     if not os.path.exists(logpath):
         os.makedirs(logpath)
     filepath = os.path.join(logpath, filename)
-    print filepath
     logger = logging.getLogger(loggername)
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -88,4 +137,4 @@ if __name__ == '__main__':
         logger.info("Device build image:%s"%(device.build_image))
         device.device_send_command("update terminal paging disable")
 
-        Pretesting_Cellular(device)
+        Pretesting_Wifi(device)
