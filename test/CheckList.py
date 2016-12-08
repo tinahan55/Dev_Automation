@@ -29,7 +29,7 @@ def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
 
 
 if __name__ == '__main__':
-    logfilename = "CheckList%s.log"%(strftime("%Y%m%d%H:%M", gmtime()))
+    logfilename = "CheckList%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
     logger = set_log(logfilename,"check_list")
     ip ="10.2.52.51"
     port = 0
@@ -50,6 +50,15 @@ if __name__ == '__main__':
         checkitem = "device_check_cellular"
         checkcommandlist = ["slotmapping -l","slotmapping -l","show line cellular all"]
         checkitemlist = ["usb1","usb2","cellular (.*) 0","fcapsd (.*) Started (.*) platformd (.*) Started"]
+        logger.info("[%s]Starting"%(checkitem))
+        for index,value in enumerate(checkcommandlist):
+            checkmatch = checkitemlist[index]
+            device_check_info(logger,device,checkitem,value,checkmatch)
+
+
+        checkitem = "device_check_wifi"
+        checkcommandlist = ["ifconfig -a","ifconfig -a"]
+        checkitemlist = ["wlan0","wlan1"]
         logger.info("[%s]Starting"%(checkitem))
         for index,value in enumerate(checkcommandlist):
             checkmatch = checkitemlist[index]

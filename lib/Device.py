@@ -1,7 +1,9 @@
 import logging
+import os
 from Image import  *
 from TelnetConsole import *
 from SSHConsole import *
+
 
 
 
@@ -21,7 +23,6 @@ class Device_Tool(object):
         self.bios_version = ""
         self.boot_image = ""
         self.build_image =""
-
 
     def device_connect(self):
         self.target_response =""
@@ -43,7 +44,9 @@ class Device_Tool(object):
 
     def __device_check_mode(self,command):
         command_mode = 'shell'
-        if 'config' in command or 'update' in command or 'show' in command or 'diag' in command:
+        lileecommandlist = ["config","update","show","diag","create"]
+        filter_result =  list(lileecommand for lileecommand in lileecommandlist if lileecommand in command)
+        if len(filter_result) >0:
             command_mode ='lilee'
         return command_mode
 
@@ -52,7 +55,7 @@ class Device_Tool(object):
         return ansi_escape.sub('', line).replace("\r","")
 
     def device_send_command(self,command):
-        timeout = 10
+        timeout = 5
         commandresult = False
         commandresponse = ""
         command_mode =self.__device_check_mode(command)
@@ -83,6 +86,22 @@ class Device_Tool(object):
                 self.target_response = self._escape_ansi(self.target.sshresult)
 
         return commandresult
+
+    def device_get_running_config(self):
+        if(self.device_send_command("show running-configuration")):
+            return self.target_response
+        else :
+            return ""
+
+    def device_get_running_config_list(self):
+        config = self.device_get_running_config()
+        return list(runningconfig for runningconfig in config.split("\n") if '>' not in runningconfig)
+
+    def device_set_configs(self,configlist):
+        runningconfig = self.device_get_running_config()
+        for config in configlist:
+            if config not in runningconfig:
+                self.device_send_command(config)
 
     def device_reboot(self):
         if self.device_send_command("reboot"):
@@ -126,6 +145,7 @@ def set_log(filename,loggername):
 
 if __name__ == '__main__':
 
+
     logger = set_log("Device.log","device_test")
 
     #telnet_device =Device_Tool("10.2.11.58",2041,"telnet","admin","admin","device_test")
@@ -140,13 +160,11 @@ if __name__ == '__main__':
 
     #device =Device_Tool("10.2.52.51",0,"ssh","admin","admin","device_test")
 
-    device =Device_Tool("10.2.11.58",2045,"telnet","admin","admin","device_test")
-
+    device =Device_Tool("10.2.52.51",0,"ssh","admin","admin","device_test")
+    configlist =  list()
     if device:
-        device.device_get_version()
-        print device.bios_version
-        print device.boot_image
-        print device.build_image
+        device.device_set_config(configlist)
+
 
 
 
