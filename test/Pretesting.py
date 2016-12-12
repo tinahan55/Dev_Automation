@@ -41,7 +41,6 @@ def Pretesting_Cellular(device):
         checkmatch = checkitemlist[index]
         device_check_info(logger,device,checkitem,value,checkmatch)
 
-
 def Pretesting_Wifi(device):
     configlist = list()
     ap_profile_name ="ap-profile"
@@ -91,7 +90,7 @@ def Pretesting_Wifi(device):
 
     checkcommandlist = ["show wifi-profile %s"%(sta_profile_name),"show platform led","show interface all"
         ,"show interface wlan %s detail"%(wlan0_index)]
-    checkitemlist = ["SSID : %s | WPA PSK : %s"%(ap_ssid_name,wpa_key),"WLAN%s (.*) green"%(wlan0_index),"wlan %s (.*) %s up"%(wlan0_index)
+    checkitemlist = ["SSID : %s | WPA PSK : %s"%(ap_ssid_name,wpa_key),"WLAN%s (.*) green"%(wlan0_index),"wlan %s (.*) up"%(wlan0_index)
         ,"Operational : up | MTU : 1500"]
 
     logger.info("[%s]Starting"%(checkitem))
@@ -99,9 +98,52 @@ def Pretesting_Wifi(device):
         checkmatch = checkitemlist[index]
         device_check_info(logger,device,checkitem,value,checkmatch)
 
+def Pretesting_Poe(device):
+
+    checkitem ="Pretesting_Poe"
+    checkcommandlist = ["show poe budget"]
+
+    checkitemlist = ["Oper. Limit: 61.6 watts"]
+
+    logger.info("[%s]Starting"%(checkitem))
+    for index,value in enumerate(checkcommandlist):
+        checkmatch = checkitemlist[index]
+        device_check_info(logger,device,checkitem,value,checkmatch)
+
+def Pretesting_GPS(device):
+
+    checkitem ="Pretesting_GPS"
+    checkcommandlist = ["show gps detail"]
+
+    checkitemlist = ["Fix Quality : 3D | Latitude : 25(.*) | Longitude : 121(.*)"]
+
+    logger.info("[%s]Starting"%(checkitem))
+    for index,value in enumerate(checkcommandlist):
+        checkmatch = checkitemlist[index]
+        device_check_info(logger,device,checkitem,value,checkmatch)
 
 
+def Pretesting_Appengine(device):
+    checkitem ="Pretesting_Appengine"
+    device.device_send_command("config app-engine 0 description SQA")
 
+    logger.info("[%s]Starting- app engine stop"%(checkitem))
+    device.device_send_command("config app-engine 0 disable")
+    time.sleep(30)
+    checkcommandlist = ["show app-engine 0 info"]
+    checkitemlist = ["Administrative : Power Off | Operational : Not Running | Description : SQA"]
+    for index,value in enumerate(checkcommandlist):
+        checkmatch = checkitemlist[index]
+        device_check_info(logger,device,checkitem,value,checkmatch)
+
+    logger.info("[%s]Starting- app engine start"%(checkitem))
+    device.device_send_command("config app-engine 0 enable")
+    time.sleep(30)
+    checkcommandlist = ["show app-engine 0 info"]
+    checkitemlist = ["Administrative : Power On | Operational : Running | Description : SQA"]
+    for index,value in enumerate(checkcommandlist):
+        checkmatch = checkitemlist[index]
+        device_check_info(logger,device,checkitem,value,checkmatch)
 
 def set_log(filename,loggername):
     logpath = os.path.join(os.getcwd(), 'log')
@@ -137,4 +179,14 @@ if __name__ == '__main__':
         logger.info("Device build image:%s"%(device.build_image))
         device.device_send_command("update terminal paging disable")
 
-        Pretesting_Wifi(device)
+
+        #Pretesting_Cellular(device)
+
+        #Pretesting_Wifi(device)
+
+
+        #Pretesting_Poe(device)
+
+        #Pretesting_GPS(device)
+
+        Pretesting_Appengine(device)

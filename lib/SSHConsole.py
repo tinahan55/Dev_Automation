@@ -47,11 +47,13 @@ class SSHConnect(object):
 
     def __set_command_mode(self,remote_conn,mode):
         mode_result = False
+        remote_conn.send("\n")
+        time.sleep(2)
+        response_result = remote_conn.recv(5000)
         if mode == "shell":
-            remote_conn.send("\n")
-            time.sleep(2)
-            response_result = remote_conn.recv(5000)
-            if "localdomain" in response_result:
+            if "bash" in response_result:
+                mode_result = True
+            elif "localdomain" in response_result:
                 remote_conn.send("%s\n"%("diag shell"))
                 time.sleep(2)
                 response_result = remote_conn.recv(5000)
@@ -61,21 +63,19 @@ class SSHConnect(object):
                     response_result = remote_conn.recv(5000)
                     if "bash" in response_result:
                         mode_result =True
-            else:
-                mode_result = True
 
         elif mode == "lilee":
-            remote_conn.send("\n")
-            response_result = remote_conn.recv(5000)
-            if "bash" in response_result:
+            if "localdomain" in response_result:
+                mode_result = True
+
+            elif "bash" in response_result:
                 remote_conn.send("%s\n"%("exit"))
                 time.sleep(2)
                 response_result = remote_conn.recv(5000)
                 if "localdomain" in response_result:
                     mode_result =True
-            else:
-                mode_result = True
-
+        else:
+            mode_result=True
         return mode_result
 
     def write_command(self, command,timeout,mode,logflag =True):
@@ -83,6 +83,7 @@ class SSHConnect(object):
             mode_result = True
             if(self.ssh):
                 remote_conn = self.ssh.invoke_shell()
+
                 if self.__set_command_mode(remote_conn,mode):
                     remote_conn.send("%s\n"%(command))
                     time.sleep(timeout)
@@ -98,6 +99,7 @@ class SSHConnect(object):
             self.IsConnect =False
             self.ssh.close()
 
+
     def write_command_match(self,command,timeout,mode,result):
          try:
             if(self.ssh):
@@ -112,8 +114,33 @@ class SSHConnect(object):
                         return False
                     else:
                         return True
-         except :
-                return False
+         except Exception,ex:
+             self.logging.error("[write_multip_command_match]write command fail:%s "%(str(ex)))
+             return False
+
+
+
+    def write_multip_command_match(self,commandlist,timeout,mode,resultlist):
+         try:
+             if(self.ssh):
+                remote_conn = self.ssh.invoke_shell()
+                if self.__set_command_mode(remote_conn,mode):
+                    for index,command in enumerate(commandlist):
+                        result = resultlist[index]
+                        remote_conn.send((command + "\n").encode('ascii'))
+                        time.sleep(timeout)
+                        self.sshresult = remote_conn.recv(5000)
+                        p = re.compile(result)
+                        match = p.search(self.sshresult)
+                        if (match == None):
+                            self.logging.error("[write_multip_command_match]command(%s):result(%s)fail:%s "%(command,result))
+                            return False
+                    return True
+         except Exception,ex:
+            self.logging.error("[write_multip_command_match]write command fail:%s "%(str(ex)))
+            return False
+
+
 
 def set_log(filename,loggername):
     logger = logging.getLogger(loggername)

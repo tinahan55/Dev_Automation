@@ -23,6 +23,7 @@ class Device_Tool(object):
         self.bios_version = ""
         self.boot_image = ""
         self.build_image =""
+        self.device_product_name ="LMC-5500-1E8R1H05"
 
     def device_connect(self):
         self.target_response =""
@@ -44,10 +45,15 @@ class Device_Tool(object):
 
     def __device_check_mode(self,command):
         command_mode = 'shell'
-        lileecommandlist = ["config","update","show","diag","create"]
-        filter_result =  list(lileecommand for lileecommand in lileecommandlist if lileecommand in command)
+        bashcommandlist = ["ifconfig","ping"]
+        filter_result =  list(lileecommand for lileecommand in bashcommandlist if lileecommand in command)
         if len(filter_result) >0:
-            command_mode ='lilee'
+            command_mode = "shell"
+        else:
+            lileecommandlist = ["config","update","show","diag","create","yes","no"]
+            filter_result =  list(lileecommand for lileecommand in lileecommandlist if lileecommand in command)
+            if len(filter_result) >0:
+                command_mode ='lilee'
         return command_mode
 
     def _escape_ansi(self,line):
@@ -87,6 +93,25 @@ class Device_Tool(object):
 
         return commandresult
 
+    def device_send_multip_command_match(self,commandlist,timeout,matchresultlist):
+        timeout = 10
+        commandresult = False
+        command_mode ="lilee"
+        if self.connecttype == "telnet":
+            if self.target!=None:
+                commandresult = self.target.send_multip_command_match(commandlist,timeout,command_mode,matchresultlist)
+                self.target_response = self._escape_ansi(self.target.telnetresult)
+
+
+        elif self.connecttype =="ssh":
+            if self.target!=None:
+                commandresult = self.target.write_multip_command_match(commandlist,timeout,command_mode,matchresultlist)
+                self.target_response = self._escape_ansi(self.target.sshresult)
+
+        return commandresult
+
+
+
     def device_get_running_config(self):
         if(self.device_send_command("show running-configuration")):
             return self.target_response
@@ -105,7 +130,7 @@ class Device_Tool(object):
 
     def device_reboot(self):
         if self.device_send_command("reboot"):
-            time.sleep(120)
+            time.sleep(180)
             self.target =  self.device_connect()
             if self.device_send_command_match("show version",5,"Lilee(.*) Ltd"):
                 return True
@@ -127,6 +152,11 @@ class Device_Tool(object):
             sub_match = re.findall(r'Recovery Mode Image Version (.*)\n', self.target_response)
             if sub_match:
                 self.boot_image=  sub_match[0]
+            sub_match = re.findall(r'Product Name: (.*)\n', self.target_response)
+            if sub_match:
+                self.device_product_name=  sub_match[0]
+
+
 
 
 def set_log(filename,loggername):
@@ -161,9 +191,21 @@ if __name__ == '__main__':
     #device =Device_Tool("10.2.52.51",0,"ssh","admin","admin","device_test")
 
     device =Device_Tool("10.2.52.51",0,"ssh","admin","admin","device_test")
-    configlist =  list()
+
     if device:
-        device.device_set_config(configlist)
+
+        command ="update boot system-image http://10.2.10.17/weekly/v3.3/sts1000_u_3.3_build46.img"
+        result =  device.device_send_command_match("ping -c5 10.2.10.17",2,"64 bytes from 10.2.10.17: icmp_seq=5")
+
+        print result
+        print device.target_response
+        if result:
+            result = device.device_send_command(("yes"))
+            print result
+            print device.target_response
+
+
+
 
 
 

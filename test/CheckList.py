@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
         checkitem = "device_check_cellular"
         checkcommandlist = ["slotmapping -l","slotmapping -l","show line cellular all"]
-        checkitemlist = ["usb1","usb2","cellular (.*) 0","fcapsd (.*) Started (.*) platformd (.*) Started"]
+        checkitemlist = ["usb1","usb2","cellular (.*) 0"]
         logger.info("[%s]Starting"%(checkitem))
         for index,value in enumerate(checkcommandlist):
             checkmatch = checkitemlist[index]
@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
         checkitem ="check_service_status"
         checkcommandlist = ["show service all","show service all","show service all","show service all"]
-        checkitemlist = ["fcapsd (.*) Started","platformd (.*) Started","imgupd_updater (.*) Started","gpsd (.*) Started"]
+        checkitemlist = ["fcapsd (.*) Started ","platformd (.*) Started","imgupd_updater (.*) Started","gpsd (.*) Started"]
         logger.info("[%s]Starting"%(checkitem))
         for index,value in enumerate(checkcommandlist):
             checkmatch = checkitemlist[index]

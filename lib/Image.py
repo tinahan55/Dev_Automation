@@ -38,7 +38,7 @@ class ImageInfo(object):
         self.imagepath = urlFW + imagename +  self.imageno + ".img"
         print "[searchFW] Last build:"+ self.imagepath
 
-    def search_image(self, mode , devicetype,buildno):
+    def search_image(self, mode , devicetype,buildno="1"):
         try :
             imagename = self.get_image_name(devicetype)
             print imagename

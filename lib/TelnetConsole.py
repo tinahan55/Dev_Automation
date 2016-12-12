@@ -122,31 +122,30 @@ class Telnet_Console(object):
     def __set_command_mode(self,mode):
         mode_result = False
         if mode == "shell":
-            self.telnet.write("\n")
-            readstring =self.telnet.read_until('bash', timeout=3)
-            if 'bash' not in readstring:
-                self.telnet.write(("diag shell\n").encode('ascii'))
-                readstring = self.telnet.read_until('Password', timeout=3)
-                if "Password" in readstring:
-                    self.telnet.write(("Unsupported!\n").encode('ascii'))
-                    readstring =self.telnet.read_until('bash', timeout=3)
-                    if 'bash' in readstring:
-                        mode_result =True
-            else:
-                mode_result = True
+                self.telnet.write("\n")
+                readstring =self.telnet.read_until('bash', timeout=3)
+                if 'bash' not in readstring:
+                    self.telnet.write(("diag shell\n").encode('ascii'))
+                    readstring = self.telnet.read_until('Password', timeout=3)
+                    if "Password" in readstring:
+                        self.telnet.write(("Unsupported!\n").encode('ascii'))
+                        readstring =self.telnet.read_until('bash', timeout=3)
+                        if 'bash' in readstring:
+                            mode_result =True
+                else:
+                    mode_result = True
 
         elif mode == "lilee":
-            self.telnet.write("\n")
-            readstring =self.telnet.read_until('localdomain', timeout=3)
-            if 'localdomain' not in readstring:
-                self.telnet.write("%s\n"%("exit"))
-                time.sleep(2)
+                self.telnet.write("\n")
                 readstring =self.telnet.read_until('localdomain', timeout=3)
-                if 'localdomain' in readstring:
-                    mode_result =True
-            else:
-                mode_result = True
-
+                if 'localdomain' not in readstring:
+                    self.telnet.write("%s\n"%("exit"))
+                    time.sleep(2)
+                    readstring =self.telnet.read_until('localdomain', timeout=3)
+                    if 'localdomain' in readstring:
+                        mode_result =True
+                else:
+                    mode_result = True
         return mode_result
 
 
@@ -176,6 +175,21 @@ class Telnet_Console(object):
                     return False
                 else:
                     return True
+         except :
+                return False
+
+    def send_multip_command_match(self,commandlist,timeout,mode,resultlist,checkResponse="localdomain"):
+         try:
+            if self.__set_command_mode(mode):
+                for index,command in enumerate(commandlist):
+                    result = resultlist[index]
+                    self.telnet.write((command + "\n").encode('ascii'))
+                    self.telnetresult = self.telnet.read_until(checkResponse, timeout=int(timeout))
+                    p = re.compile(result)
+                    match = p.search(self.telnetresult)
+                    if (match == None):
+                        return False
+                return True
          except :
                 return False
 
