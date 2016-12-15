@@ -18,8 +18,6 @@ class Profile(object):
             commandlist.append("config wifi-profile \"%s\" authentication wpa-psk ascii \"%s\""%(profile_name,wpa_key))
         return commandlist
 
-
-
 class Interface(object):
     def __init__(self,type):
         self.type = type
@@ -32,7 +30,6 @@ class Interface(object):
         commandlist.append("config interface dialer %s enable"%(dialer_index))
         return commandlist
 
-
     def get_wifi_interface(self,wifi_index,profile_name,wifi_mode,ip_mode,ipaddress = "192.168.11.1",netmask="255.255.255.0"):
         commandlist = list()
         commandlist.append("config add interface wlan %s %s"%(wifi_index,wifi_mode))
@@ -43,18 +40,6 @@ class Interface(object):
             commandlist.append("config interface wlan %s ip address dhcp"%(wifi_index))
         commandlist.append("config interface wlan %s enable"%(wifi_index))
         return commandlist
-
-    def get_vlan_interface(self,vlan_index,vlan_description,ip_mode,ipaddress,netmask):
-        commandlist = list()
-        commandlist.append("config add interface vlan %s"%(vlan_index))
-        commandlist.append("config interface vlan %s description \"%s\""%(vlan_index,vlan_description))
-        if ip_mode =="static":
-            commandlist.append("config interface vlan %s ip address %s netmask %s"%(vlan_index,ipaddress,netmask))
-        elif ip_mode =="dhcp":
-            commandlist.append("config interface vlan %s ip address dhcp"%(vlan_index))
-        commandlist.append("config interface vlan %s enable"%(vlan_index))
-        return commandlist
-
 
     def get_port_interface(self,port_index,port_type,vlan_index,vlan_tagged,port_tagged):
         commandlist = list()
@@ -70,8 +55,25 @@ class Interface(object):
         return commandlist
 
 
-    #for ip_type = destination or source or protocol
-    def get_classifier_interface(self,index,description,ip_type,ip_port_mode,port_no,ip_address):
+class Function(object):
+    def __init__(self,type):
+        self.type = type
+
+
+    def get_vlan(self,vlan_index,vlan_description,ip_mode,ipaddress,netmask):
+        commandlist = list()
+        commandlist.append("config add interface vlan %s"%(vlan_index))
+        commandlist.append("config interface vlan %s description \"%s\""%(vlan_index,vlan_description))
+        if ip_mode =="static":
+            commandlist.append("config interface vlan %s ip address %s netmask %s"%(vlan_index,ipaddress,netmask))
+        elif ip_mode =="dhcp":
+            commandlist.append("config interface vlan %s ip address dhcp"%(vlan_index))
+        commandlist.append("config interface vlan %s enable"%(vlan_index))
+        return commandlist
+
+
+       #for ip_type = destination or source or protocol
+    def get_classifier(self,index,description,ip_type,ip_port_mode,port_no,ip_address):
         commandlist = list()
         commandlist.append("config add classifier %s"%(index))
         if description!="":
@@ -84,6 +86,17 @@ class Interface(object):
         else:
             commandlist.append("config classifier %s match ip %s \"%s\""%(index,ip_type,ip_address))
         return commandlist
+
+
+
+
+
+
+
+
+
+
+
 
 
 
