@@ -89,8 +89,7 @@ class Function(object):
         return commandlist
 
 
-    def get_dhcp_pool(self, pool_name, pool_start_ip, pool_end_ip, netmask, pool_gateway, pool_dns_server, dns_priority,
-                      vlan_index):
+    def get_dhcp_pool(self, pool_name, pool_start_ip, pool_end_ip, netmask, pool_gateway, pool_dns_server, dns_priority, vlan_index):
         commandlist = list()
         commandlist.append("config add dhcp-pool \"%s\"" % (pool_name))
         commandlist.append("config dhcp-pool \"%s\" add ip-address-range from %s to %s" % (pool_name, pool_start_ip, pool_end_ip))
