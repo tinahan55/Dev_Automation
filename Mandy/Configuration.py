@@ -97,7 +97,7 @@ class Function(object):
         commandlist.append("config dhcp-pool \"%s\" ip default-gateway %s"%(pool_name, pool_gateway))
         commandlist.append("config dhcp-pool \"%s\" ip dns-server %s priority %s"%(pool_name, pool_dns_server, dns_priority))
         if dhcp_interface == "maintenance":
-            commandlist.append("config dhcp-server pool \"%s\" add interface maintenance %s"%(pool_name, vlan_index))
+            commandlist.append("config dhcp-server pool \"%s\" add interface maintenance %s"%(pool_name, maintenance_index))
         elif dhcp_interface == "vlan":
             commandlist.append("config dhcp-server pool \"%s\" add interface vlan %s"%(pool_name, vlan_index))
         elif dhcp_interface == "wlan":
