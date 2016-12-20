@@ -89,22 +89,14 @@ class Function(object):
         return commandlist
 
 
-    def get_dhcp_pool(self, pool_name, pool_start_ip, pool_end_ip, netmask, pool_gateway, pool_dns_server, dns_priority, dhcp_interface, vlan_index, wlan_index, dialer_index):
+    def get_dhcp_pool(self, pool_name, pool_start_ip, pool_end_ip, netmask, pool_gateway, pool_dns_server, dns_priority, dhcp_interface, dhcp_interface_index):
         commandlist = list()
         commandlist.append("config add dhcp-pool \"%s\""%(pool_name))
         commandlist.append("config dhcp-pool \"%s\" add ip-address-range from %s to %s"%(pool_name, pool_start_ip, pool_end_ip))
         commandlist.append("config dhcp-pool \"%s\" netmask %s"%(pool_name, netmask))
         commandlist.append("config dhcp-pool \"%s\" ip default-gateway %s"%(pool_name, pool_gateway))
         commandlist.append("config dhcp-pool \"%s\" ip dns-server %s priority %s"%(pool_name, pool_dns_server, dns_priority))
-        if dhcp_interface == "maintenance":
-            commandlist.append("config dhcp-server pool \"%s\" add interface maintenance 0"%(pool_name))
-        elif dhcp_interface == "vlan":
-            commandlist.append("config dhcp-server pool \"%s\" add interface vlan %s"%(pool_name, vlan_index))
-        elif dhcp_interface == "wlan":
-            commandlist.append("config dhcp-server pool \"%s\" add interface wlan %s"%(pool_name, wlan_index))
-        elif dhcp_interface == "dialer":
-            commandlist.append("config dhcp-server pool \"%s\" add interface dialer %s"%(pool_name, dialer_index))
-        commandlist.append("config service dhcp-server enable")
+        commandlist.append("config dhcp-server pool \"%s\" add interface%s %s"%(pool_name, dhcp_interface, dhcp_interface_index))
         return commandlist
 
 
