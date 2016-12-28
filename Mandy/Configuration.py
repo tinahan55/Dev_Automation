@@ -105,31 +105,25 @@ class Function(object):
         if nat_type == "snat":
             if classifier_index != "":
                 if port != "":
-                    commandlist.append(
-                        "config snat out-interface %s %s classifier %s translate-to ip %s port % priority %s" % (
-                        interface, interface_index, classifier_index, ip, port, priority))
+                    commandlist.append("config snat out-interface %s %s classifier %s translate-to ip %s port % priority %s"%(interface, interface_index, classifier_index, ip, port, priority))
                 else:
-                    commandlist.append("config snat out-interface %s %s classifier %s translate-to ip %s priority %s" % (
-                    interface, interface_index, classifier_index, ip, priority))
+                    commandlist.append("config snat out-interface %s %s classifier %s translate-to ip %s priority %s"%(interface, interface_index, classifier_index, ip, priority))
             else:
-                commandlist.append("config snat out-interface %s %s priority %s" % (interface, interface_index, priority))
+                commandlist.append("config snat out-interface %s %s priority %s"%(interface, interface_index, priority))
         elif nat_type == "dnat":
             if classifier_index != "":
                 if port != "":
-                    commandlist.append(
-                        "config dnat in-interface %s %s classifier %s translate-to ip %s port % priority %s" % (
-                        interface, interface_index, classifier_index, ip, port, priority))
+                    commandlist.append("config dnat in-interface %s %s classifier %s translate-to ip %s port % priority %s"%(interface, interface_index, classifier_index, ip, port, priority))
                 else:
-                    commandlist.append("config dnat in-interface %s %s classifier %s translate-to ip %s priority %s" % (
-                    interface, interface_index, classifier_index, ip, priority))
+                    commandlist.append("config dnat in-interface %s %s classifier %s translate-to ip %s priority %s"%(interface, interface_index, classifier_index, ip, priority))
             else:
                 if port != "":
-                    commandlist.append("config dnat in-interface %s %s translate-to ip %s port % priority %s" % (
-                    interface, interface_index, ip, port, priority))
+                    commandlist.append("config dnat in-interface %s %s translate-to ip %s port % priority %s"%(interface, interface_index, ip, port, priority))
                 else:
-                    commandlist.append("config dnat in-interface %s %s translate-to ip %s priority %s" % (
-                    interface, interface_index, ip, priority))
+                    commandlist.append("config dnat in-interface %s %s translate-to ip %s priority %s"%(interface, interface_index, ip, priority))
         return commandlist
+
+
 
 
 
