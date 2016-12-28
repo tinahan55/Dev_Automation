@@ -40,7 +40,7 @@ def NAT_port_setup(device):
 
 def NAT_dhcp(device):
     configlist = list()
-    pool_name = "wrb-dhcp"
+    pool_name = "test-dhcp"
     pool_start_ip = "10.1.4.153"
     pool_end_ip = "10.1.4.153"
     netmask = "255.255.255.0"
@@ -58,7 +58,22 @@ def NAT_dhcp(device):
     #add verify command
 
 
+def NAT_classifier(device):
+    configlist = list()
+    index = 100
+    description = "automatically added for port forwarding"
+    ip_type = "protocol"
+    ip_port_mode = "dport"
+    port_no = 2222
+    ip_address = "10.1.4.226"
+    #少了tcp和udp
 
+    function = Function("classifier")
+    configlist.extend(function.get_classifier(index,description,ip_type,ip_port_mode,port_no,ip_address))
+
+    device.device_set_configs(configlist)
+
+    #add verify command
 
 
 
