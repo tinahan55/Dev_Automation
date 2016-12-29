@@ -8,14 +8,21 @@ class Profile(object):
         commandlist.append("config cellular-profile \"%s\" access-point-name \"%s\""%(profile_name,access_name))
         return commandlist
 
-    def get_wifi_profile(self,profile_name,ssid,key_type,wpa_version,wpa_key):
+    def get_wifi_profile(self,profile_name,ssid,key_type,wpa_version,wpa_key="",auth_type="",auth_eap_type=""
+                         ,eap_username="",eap_key=""):
         commandlist = list()
         commandlist.append("create wifi-profile \"%s\""%(profile_name))
         commandlist.append("config wifi-profile \"%s\" ssid \"%s\""%(profile_name,ssid))
         if key_type !="":
             commandlist.append("config wifi-profile \"%s\" authentication key-management \"%s\""%(profile_name,key_type))
             commandlist.append("config wifi-profile \"%s\" authentication wpa-version \"%s\""%(profile_name,wpa_version))
-            commandlist.append("config wifi-profile \"%s\" authentication wpa-psk ascii \"%s\""%(profile_name,wpa_key))
+            if key_type =="wpa-psk":
+                commandlist.append("config wifi-profile \"%s\" authentication wpa-psk ascii \"%s\""%(profile_name,wpa_key))
+            elif key_type =="wpa-eap":
+                commandlist.append("config wifi-profile \"%s\" authentication %s type \"%s\""%(profile_name,auth_type,auth_eap_type))
+                commandlist.append("config wifi-profile \"%s\" authentication eap-identity \"%s\""%(profile_name,eap_username))
+                commandlist.append("config wifi-profile \"%s\" authentication eap-password \"%s\""%(profile_name,eap_key))
+
         return commandlist
 
 class Interface(object):
