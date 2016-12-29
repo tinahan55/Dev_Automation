@@ -1,99 +1,74 @@
 from lib.powerCycle import *
-from lib.TelnetConsole import *
-from lib.SSHConsole import *
+from lib.Device import *
 import sys
 import re
 import logging
+from time import gmtime, strftime
 
 
 def set_log(filename,loggername):
+    logpath = os.path.join(os.getcwd(), 'log')
+    if not os.path.exists(logpath):
+        os.makedirs(logpath)
+    filepath = os.path.join(logpath, filename)
     logger = logging.getLogger(loggername)
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh = logging.FileHandler(filename)
+    fh = logging.FileHandler(filepath)
     fh.setLevel(logging.INFO)
     fh.setFormatter(formatter)
     logger.addHandler(fh)
-
     console = logging.StreamHandler()
     console.setLevel(logging.DEBUG)
     console.setFormatter(formatter)
     logger.addHandler(console)
     return logger
 
-
-def command_result_comparsion(console,consoletype,checkcommandlist,checkaction,checkitem):
-    for index, value in enumerate(checkcommandlist):
-        check_string_list = checkitem[index].split(":")
-        check_action = checkaction[index]
-        for chekc_index, check_string in enumerate(check_string_list):
-            check_string = ("%s(.*) %s") % (check_string, check_action)
-            check_result = False
-            if consoletype =="telnet":
-                check_result = console.send_command_match(value,check_string,10,"localdomain")
-            elif consoletype == "ssh":
-                check_result = console.write_command_match(value,check_string)
-            logging.info("[command_result_comparsion][command:%s][check:%s] result :%s"%(value,check_string,check_result))
-
-
-
-
-
+def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
+    title = "[%s][%s]"%(checkitem,checkcommand)
+    logger.info("%s starting"%(title))
+    checkresult = device.device_send_command_match(checkcommand,5,checkmatch)
+    logger.info("%s check %s result :%s"%(title,checkmatch,checkresult))
+    if checkresult== False:
+        logger.info("%s check %s error :%s"%(title,checkmatch,device.target_response))
 
 if __name__ == '__main__':
-    log_name = "coolboot_testing"
-    log_filename="coolboot.log"
-    type ='ssh'
-    consoleip = "10.2.53.54"
-    consoleport = 2038
-    consoletype = "router"
-    device_user_name = "admin"
-    device_user_pwd = "admin"
+    logfilename = "coolboot%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
+    logger = set_log(logfilename,"cool_boot")
+    ip = "10.2.53.158"
+    port = 0
+    mode ="ssh"
+    username = "admin"
+    password ="admin"
     din_relay_ip = "10.2.53.199"
     din_relay_user ="root"
     din_relay_pwd ="lilee1234"
-    din_relay_device_name = "R1-WDU-LMS3.0"
+    din_relay_device_name = "R1-STS4"
     test_cycle = 20000
     power_cycle_sleep = 120
-    checkcommandlist = ["show interface all","show mobility tunnel all"]
-    checkaction =["up","UA"]
-    checkitem=["dialer 0","dialer 0"]
+    checkcommandlist = ["show interface all"]
+    checkitemlist = ["maintenance 0 (.*) up"]
     try:
-        logger = set_log(log_filename,log_name)
+        device =Device_Tool(ip,port,mode,username,password,"check_list")
         powerCycle = powerCycle()
-        if type == "telnet":
-            telnetconsole = Telnet_Console(consoleip,consoleport)
-            for k in range(0, test_cycle):
-                if telnetconsole.kill_User(consoletype) :
-                    power_cycle_result =powerCycle.powerControl(din_relay_ip, din_relay_user, din_relay_pwd, din_relay_device_name )
-                    logger.info("[power_cycle_result]result :%s"%(power_cycle_result))
-                    if power_cycle_result:
-                            logging.info("[power_cycle_sleep]%s seconds"%(power_cycle_sleep))
-                            time.sleep(power_cycle_sleep)
-                            login_result= telnetconsole.login()
-                            logger.info("[telnet login]result :%s"%(login_result))
-                            if login_result:
-                                logger.info("update terminal paging disable")
-                                telnetconsole.send_command("update terminal paging disable",5,"localdomain")
-                                time.sleep(5)
-                                command_result_comparsion(telnetconsole,type,checkcommandlist,checkaction,checkitem)
-        elif type =="ssh":
-            sshconsole =  SSHConnect(consoleip,)
+        if device:
+            device.device_get_version()
+            logger.info("Device Bios Version:%s"%(device.bios_version))
+            logger.info("Device recovery image:%s"%(device.boot_image))
+            logger.info("Device build image:%s"%(device.build_image))
             for k in range(0, test_cycle):
                 power_cycle_result =powerCycle.powerControl(din_relay_ip, din_relay_user, din_relay_pwd, din_relay_device_name )
-                logger.info("[power_cycle_result]result :%s"%(power_cycle_result))
+                logger.info("[%s][power_cycle_result]result :%s"%(k,power_cycle_result))
                 if power_cycle_result:
-                    logger.info("[power_cycle_sleep]%s seconds"%(power_cycle_sleep))
+                    logger.info("[%s][power_cycle_sleep]%s seconds"%(k,power_cycle_sleep))
                     time.sleep(power_cycle_sleep)
-                    sshconsole.connect()
-                    logger.info("[ssh login]result :%s"%(sshconsole.IsConnect))
-                    if sshconsole.IsConnect:
-                        logger.info("update terminal paging disable")
-                        sshconsole.write_command("update terminal paging disable",False)
-                        time.sleep(5)
-                        command_result_comparsion(sshconsole,type,checkcommandlist,checkaction,checkitem)
-                        time.sleep(1)
-                        sshconsole.disconnect()
+                    device =Device_Tool(ip,port,mode,username,password,"check_list")
+                    if device:
+                        checkitem = "device_check_interface_and_mobility"
+                        logger.info("[%s]Starting"%(checkitem))
+                        for index,value in enumerate(checkcommandlist):
+                            checkmatch = checkitemlist[index]
+                            device_check_info(logger,device,checkitem,value,checkmatch)
 
     except Exception,ex:
         logging.error("[coolboot]exception fail:%s "%(str(ex)))
