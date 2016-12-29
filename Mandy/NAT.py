@@ -1,28 +1,91 @@
 from lib.Device import *
-from lib.Configuration_add_dhcp import *
+from lib.Configuration import *
 import logging
 import os
 from time import gmtime, strftime
 
-class NAT(object):
-    def __init__(self, type):
-        self.type = type
 
-    def snat(self, interface, interface_index, priority):
-        commandlist = list()
-        commandlist.append("config snat out-interface %s %s priority %s"%(interface, interface_index, priority))
-        return commandlist
 
-    def dnat(self, classifier_index, description, protocol_type, dport, in_interface, interface_index, ip, port, priority):
-        commandlist = list()
-        commandlist.append("config add classifier %s"%(classifier_index))
-        commandlist.append("config classifier %s description \"%s\""%(classifier_index, description))
-        if protocol_type == "tcp" | "udp":
-            commandlist.append("config classifier %s match ip protocol %s dport %s"%(classifier_index, protocol_type, dport))
-        else:
-            commandlist.append("config classifier %s match ip protocol %s"%(classifier_index, protocol_type))
-        commandlist.append("config dnat in-interface %s %s classifier %s translate-to ip %s port %s priority %s"%(in_interface, interface_index, classifier_index, ip, port, priority))
-        return commandlist
+#def NAT_port_setup(include port and app-engine)
+#def NAT_app_engine_setup
+#def dhcp_setup
+#snat
+#dnat
+
+
+def device_check_info(logger, device, checkitem, checkcommand, checkmatch):
+    title = "[%s][%s]"%(checkitem, checkcommand)
+    logger.info("%s starting"%(title))
+    checkresult = device.device_send_command_match(checkcommand, 5, checkmatch)
+    logger.info("%s check %s result : %s"%(title, checkmatch, checkresult))
+    if checkresult == False:
+        logger.info("%s check %s error : %s"%(title, checkmatch, device.target_response))
+
+
+def NAT_port_setup(device):
+    configlist = list()
+    port_type = "port"
+    vlan_index = 100
+    port_index = 1
+    vlan_tagged = "untagged"
+    port_tagged = "untagged"
+
+    interface = Interface("Port")
+    configlist.extend(interface.get_port_interface(port_index,port_type,vlan_index,vlan_tagged,port_tagged))
+
+    device.device_set_configs(configlist)
+
+    #add verify command
+
+
+def NAT_dhcp(device):
+    configlist = list()
+    pool_name = "test-dhcp"
+    pool_start_ip = "10.1.4.153"
+    pool_end_ip = "10.1.4.153"
+    netmask = "255.255.255.0"
+    default_gateway = "10.1.4.254"
+    dns_server = "168.95.1.1"
+    dns_priority = 1
+    dhcp_interface = "vlan"
+    dhcp_interface_index = 100
+
+    function = Function("dhcp")
+    configlist.extend(function.get_dhcp_pool(pool_name, pool_start_ip, pool_end_ip, netmask, default_gateway, dns_server, dns_priority, dhcp_interface, dhcp_interface_index))
+
+    device.device_set_configs(configlist)
+
+    #add verify command
+
+
+def NAT_classifier(device):
+    configlist = list()
+    index = 100
+    description = "automatically added for port forwarding"
+    ip_type = "protocol"
+    ip_port_mode = "dport"
+    port_no = 2222
+    ip_address = "10.1.4.226"
+    #少了tcp和udp
+
+    function = Function("classifier")
+    configlist.extend(function.get_classifier(index,description,ip_type,ip_port_mode,port_no,ip_address))
+
+    device.device_set_configs(configlist)
+
+    #add verify command
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def set_log(filename, loggername):
@@ -44,19 +107,20 @@ def set_log(filename, loggername):
     return logger
 
 
+#main( connect -> initial setup -> catch config -> compare -> append config -> show and verify)
 if __name__ == '__main__':
     logfilename = "NAT%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
     logger = set_log(logfilename, "NAT_testing")
-    ip = "10.2.53.153"
-    port = "2222"
+    ip = "10.2.59.160"
+    port = 0
     mode = "ssh"
     username = "admin"
     password = "admin"
-    app_engine_device = Device_Tool(ip, port, mode, username, password, "NAT")
-    if app_engine_device:
-        app_engine_device.device_get_version()
-        logger.info("Device Bios Version: %s"%(app_engine_device.bios_version))
-        logger.info("Lilee OS Version (build image): %s"%(app_engine_device.build_image))
-        logger.info("Recovery Image Version: %s"%(app_engine_device.boot_image))
+    device = Device_Tool(ip, port, mode, username, password, "NAT")
+    if device:
+        device.device_get_version()
+        logger.info("Device Bios Version: %s"%(device.bios_version))
+        logger.info("Lilee OS Version (build image): %s"%(device.build_image))
+        logger.info("Recovery Image Version: %s"%(device.boot_image))
 
 
