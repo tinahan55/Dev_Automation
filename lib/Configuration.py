@@ -43,6 +43,7 @@ class Interface(object):
 
     def get_port_interface(self,port_index,port_type,vlan_index,vlan_tagged,port_tagged):
         commandlist = list()
+        commandlist.append("config add interface vlan %s"%(vlan_index))
         commandlist.append("config switch add vlan %s"%(vlan_index))
         if port_type == "app-engine":
             commandlist.append("config switch vlan %s add app-engine 0 port 0"%(vlan_index,port_index))
