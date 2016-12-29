@@ -22,6 +22,7 @@ def device_check_info(logger, device, checkitem, checkcommand, checkmatch):
 
 
 def NAT_port_setup(device):
+    #port
     configlist = list()
     port_type = "port"
     vlan_index = 100
@@ -29,16 +30,30 @@ def NAT_port_setup(device):
     vlan_tagged = "untagged"
     port_tagged = "untagged"
 
+    #vlan
+    ip_mode = "static"
+    ipaddress = "10.1.4.254"
+    netmask = "255.255.255.0"
+    vlan_description = "NAT  test"
+
     interface = Interface("Port")
     configlist.extend(interface.get_port_interface(port_index,port_type,vlan_index,vlan_tagged,port_tagged))
 
+    #app-engine
+    #port_type = "app-engine"
+    #interface = Interface("app-engine")
+    #configlist.extend(interface.get_port_interface(port_type))
+
+    function = Function("vlan")
+    configlist.extend(function.get_vlan(vlan_index, vlan_description, ip_mode, ipaddress, netmask))
+
     device.device_set_configs(configlist)
 
-    #add verify command
+    #verify command
     checkitem = "NAT_port_setup"
     checkcommandlist = ["show interface all", "show interface vlan %s detail"%(vlan_index), "show app-engine 0 info"]
 
-    checkitemlist = ["vlan %s up"%(vlan_index)]
+    checkitemlist = ["vlan %s"%(vlan_index), "Operational : up | MTU : 1500", "Operational : Running"]
 
     logger.info("[%s]Starting"%(checkitem))
     for index, value in enumerate(checkcommandlist):
@@ -67,7 +82,7 @@ def NAT_dhcp(device):
     checkitem = "NAT_dhcp"
     checkcommandlist = ["show dhcp-server lease"]
 
-    checkitemlist = ["dhcp-server \"%\" up"%(pool_name)]
+    checkitemlist = ["%s"%(pool_start_ip)]
 
     logger.info("[%s]Starting"%(checkitem))
     for index, value in enumerate(checkcommandlist):
@@ -166,6 +181,8 @@ if __name__ == '__main__':
         logger.info("Recovery Image Version: %s"%(device.boot_image))
 
         NAT_port_setup(device)
-        NAT_dhcp(device)
-        NAT_classifier
-        NAT(device)
+        #NAT_dhcp(device)
+        #NAT_classifier
+        #NAT(device)
+
+        #add "save configuration" command
