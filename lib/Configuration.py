@@ -53,6 +53,7 @@ class Interface(object):
             commandlist.append("config switch vlan %s port %s egress %s"%(vlan_index,port_index,vlan_tagged))
             commandlist.append("config switch port %s default vlan %s"%(port_index,vlan_index))
             commandlist.append("config switch port %s egress %s"%(port_index,port_tagged))
+        commandlist.append("config interface vlan %s enable"% (vlan_index))
         return commandlist
 
 
