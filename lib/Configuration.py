@@ -53,7 +53,7 @@ class Interface(object):
         commandlist.append("config add interface vlan %s"%(vlan_index))
         commandlist.append("config switch add vlan %s"%(vlan_index))
         if port_type == "app-engine":
-            commandlist.append("config switch vlan %s add app-engine 0 port 0"%(vlan_index,port_index))
+            commandlist.append("config switch vlan %s add app-engine 0 port 0"%(vlan_index))
             commandlist.append("config switch vlan %s app-engine 0 port 0 egress %s"%(vlan_index,vlan_tagged))
         elif port_type =="port":
             commandlist.append("config switch vlan %s add port %s"%(vlan_index,port_index))
@@ -103,7 +103,9 @@ class Function(object):
         commandlist.append("config dhcp-pool \"%s\" netmask %s"%(pool_name, netmask))
         commandlist.append("config dhcp-pool \"%s\" ip default-gateway %s"%(pool_name, default_gateway))
         commandlist.append("config dhcp-pool \"%s\" ip dns-server %s priority %s"%(pool_name, dns_server, dns_priority))
-        commandlist.append("config dhcp-server pool \"%s\" add interface%s %s"%(pool_name, dhcp_interface, dhcp_interface_index))
+        commandlist.append("config dhcp-server pool \"%s\" add interface %s %s"%(pool_name, dhcp_interface, dhcp_interface_index))
+        #dhcp-server enable
+        commandlist.append("config service dhcp-server enable")
         return commandlist
 
 
@@ -120,7 +122,7 @@ class Function(object):
         elif nat_type == "dnat":
             if classifier_index != "":
                 if port != "":
-                    commandlist.append("config dnat in-interface %s %s classifier %s translate-to ip %s port % priority %s"%(interface, interface_index, classifier_index, ip, port, priority))
+                    commandlist.append("config dnat in-interface %s %s classifier %s translate-to ip %s port %s priority %s"%(interface, interface_index, classifier_index, ip, port, priority))
                 else:
                     commandlist.append("config dnat in-interface %s %s classifier %s translate-to ip %s priority %s"%(interface, interface_index, classifier_index, ip, priority))
             else:
@@ -128,6 +130,7 @@ class Function(object):
                     commandlist.append("config dnat in-interface %s %s translate-to ip %s port % priority %s"%(interface, interface_index, ip, port, priority))
                 else:
                     commandlist.append("config dnat in-interface %s %s translate-to ip %s priority %s"%(interface, interface_index, ip, priority))
+
         return commandlist
 
 
