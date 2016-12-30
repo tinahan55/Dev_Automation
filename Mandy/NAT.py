@@ -22,8 +22,8 @@ def device_check_info(logger, device, checkitem, checkcommand, checkmatch):
 
 
 def NAT_port_setup(device):
-    #port
     configlist = list()
+    # port
     port_type = "port"
     vlan_index = 100
     port_index = 1
@@ -34,15 +34,10 @@ def NAT_port_setup(device):
     ip_mode = "static"
     ipaddress = "10.1.4.254"
     netmask = "255.255.255.0"
-    vlan_description = "NAT  test"
+    vlan_description = "NAT-test"
 
     interface = Interface("Port")
     configlist.extend(interface.get_port_interface(port_index,port_type,vlan_index,vlan_tagged,port_tagged))
-
-    #app-engine
-    #port_type = "app-engine"
-    #interface = Interface("app-engine")
-    #configlist.extend(interface.get_port_interface(port_type))
 
     function = Function("vlan")
     configlist.extend(function.get_vlan(vlan_index, vlan_description, ip_mode, ipaddress, netmask))
@@ -51,15 +46,40 @@ def NAT_port_setup(device):
 
     #verify command
     checkitem = "NAT_port_setup"
-    checkcommandlist = ["show interface all", "show interface vlan %s detail"%(vlan_index), "show app-engine 0 info"]
+    checkcommandlist = ["show interface all", "show interface vlan %s detail"%(vlan_index)]
 
-    checkitemlist = ["vlan %s"%(vlan_index), "Operational : up | MTU : 1500", "Operational : Running"]
+    checkitemlist = ["vlan %s"%(vlan_index), "Operational : up | MTU : 1500"]
 
     logger.info("[%s]Starting"%(checkitem))
     for index, value in enumerate(checkcommandlist):
         checkmatch = checkitemlist[index]
         device_check_info(logger,device,checkitem,value,checkmatch)
 
+def NAT_app_engine_setup(device):
+    configlist = list()
+    # app-engine
+    port_type = "app-engine"
+    vlan_index = 100
+    vlan_tagged = "untagged"
+
+    port_index = 1
+    port_tagged = "untagged"
+
+    interface = Interface("app-engine")
+    configlist.extend(interface.get_port_interface(port_index,port_type,vlan_index,vlan_tagged,port_tagged))
+
+    device.device_set_configs(configlist)
+
+    #verfiy command
+    checkitem = "NAT_app_engine_setup"
+    checkcommandlist = ["show app-engine 0 info"]
+
+    checkitemlist = ["Operational : Running"]
+
+    logger.info("[%s]Starting"%(checkitem))
+    for index,value in enumerate(checkcommandlist):
+        checkmatch = checkitemlist[index]
+        device_check_info(logger,device,checkitem,value,checkmatch)
 
 def NAT_dhcp(device):
     configlist = list()
@@ -107,9 +127,9 @@ def NAT_classifier(device):
 
     #add verify command
     checkitem = "NAT_classifier"
-    checkcommandlist = ["show classifier %s(.*)"%(index)]
+    checkcommandlist = ["show classifier %s"%(index)]
 
-    checkitemlist = ["classifier %s up"%(index)]
+    checkitemlist = ["Classifier ID : %s"%(index), "Protocol : %s"%(protocol_type)]
 
     logger.info("[%s]Starting"%(checkitem))
     for index, value in enumerate(checkcommandlist):
@@ -134,9 +154,9 @@ def NAT(device):
 
     #add verify command
     checkitem = "NAT"
-    checkcommandlist = ["show %s(.*)"%(nat_type)]
+    checkcommandlist = ["show %s"%(nat_type)]
 
-    checkitemlist = ["%s up"%(nat_type)]
+    checkitemlist = ["%s"%(ip)]
 
     logger.info("[%s]Starting"%(checkitem))
     for index, value in enumerate(checkcommandlist):
@@ -181,8 +201,9 @@ if __name__ == '__main__':
         logger.info("Recovery Image Version: %s"%(device.boot_image))
 
         NAT_port_setup(device)
-        #NAT_dhcp(device)
-        #NAT_classifier
-        #NAT(device)
+        NAT_app_engine_setup(device)
+        NAT_dhcp(device)
+        NAT_classifier(device)
+        NAT(device)
 
         #add "save configuration" command
