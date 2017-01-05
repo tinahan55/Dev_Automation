@@ -134,7 +134,11 @@ class Function(object):
         return commandlist
 
 
+    def get_service_enable(self):
+        commandlist = list()
+        commandlist.append("config service http enable")
 
+        return commandlist
 
 
 
