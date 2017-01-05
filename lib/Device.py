@@ -24,6 +24,7 @@ class Device_Tool(object):
         self.boot_image = ""
         self.build_image =""
         self.device_product_name ="LMC-5500-1E8R1H05"
+        self.device_set_lilee_mode =False
 
     def device_connect(self):
         self.target_response =""
@@ -44,16 +45,20 @@ class Device_Tool(object):
                 return None
 
     def __device_check_mode(self,command):
-        command_mode = 'shell'
-        bashcommandlist = ["ifconfig","ping"]
-        filter_result =  list(lileecommand for lileecommand in bashcommandlist if lileecommand in command)
-        if len(filter_result) >0:
-            command_mode = "shell"
-        else:
-            lileecommandlist = ["config","update","show","diag","create","yes","no"]
-            filter_result =  list(lileecommand for lileecommand in lileecommandlist if lileecommand in command)
+        if self.device_set_lilee_mode == False:
+            command_mode = 'shell'
+            bashcommandlist = ["ifconfig","ping"]
+            filter_result =  list(lileecommand for lileecommand in bashcommandlist if lileecommand in command)
             if len(filter_result) >0:
-                command_mode ='lilee'
+                command_mode = "shell"
+            else:
+                lileecommandlist = ["config","update","show","diag","create","yes","no","\x03"]
+                filter_result =  list(lileecommand for lileecommand in lileecommandlist if lileecommand in command)
+                if len(filter_result) >0:
+                    command_mode ='lilee'
+        else:
+            self.device_set_lilee_mode = False
+            return 'lilee'
         return command_mode
 
     def _escape_ansi(self,line):
@@ -110,8 +115,6 @@ class Device_Tool(object):
 
         return commandresult
 
-
-
     def device_get_running_config(self):
         if(self.device_send_command("show running-configuration")):
             return self.target_response
@@ -127,6 +130,13 @@ class Device_Tool(object):
         for config in configlist:
             if config not in runningconfig:
                 self.device_send_command(config)
+
+    def device_set_no_config(self,configlist):
+        runningconfig = self.device_get_running_config()
+        for config in configlist:
+            if config in runningconfig:
+                noconfig = "no %s"%(config)
+                self.device_send_command(noconfig)
 
     def device_reboot(self):
         if self.device_send_command("reboot"):

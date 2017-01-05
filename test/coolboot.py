@@ -3,9 +3,10 @@ from lib.Device import *
 import sys
 import re
 import logging
+from lib.Tool import *
 from time import gmtime, strftime
 
-
+networktool = Network()
 def set_log(filename,loggername):
     logpath = os.path.join(os.getcwd(), 'log')
     if not os.path.exists(logpath):
@@ -31,6 +32,16 @@ def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
     logger.info("%s check %s result :%s"%(title,checkmatch,checkresult))
     if checkresult== False:
         logger.info("%s check %s error :%s"%(title,checkmatch,device.target_response))
+
+def check_booting(hostip,check_cycle):
+    k = 0
+    while k < check_cycle:
+        if networktool.Host_Ping(hostip):
+            break
+        else:
+            time.sleep(1)
+        k+=1
+    return k
 
 if __name__ == '__main__':
     logfilename = "coolboot%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
@@ -61,14 +72,18 @@ if __name__ == '__main__':
                 logger.info("[%s][power_cycle_result]result :%s"%(k,power_cycle_result))
                 if power_cycle_result:
                     logger.info("[%s][power_cycle_sleep]%s seconds"%(k,power_cycle_sleep))
-                    time.sleep(power_cycle_sleep)
-                    device =Device_Tool(ip,port,mode,username,password,"check_list")
-                    if device:
-                        checkitem = "device_check_interface_and_mobility"
-                        logger.info("[%s]Starting"%(checkitem))
-                        for index,value in enumerate(checkcommandlist):
-                            checkmatch = checkitemlist[index]
-                            device_check_info(logger,device,checkitem,value,checkmatch)
+                    time.sleep(2)
+                    count = check_booting(ip,power_cycle_sleep)
+                    logger.info("[%s][power_cycle_sleep]wait %s seconds"%(k,count))
+                    if count < power_cycle_sleep:
+                        #time.sleep(power_cycle_sleep)
+                        device =Device_Tool(ip,port,mode,username,password,"check_list")
+                        if device:
+                            checkitem = "device_check_interface_and_mobility"
+                            logger.info("[%s]Starting"%(checkitem))
+                            for index,value in enumerate(checkcommandlist):
+                                checkmatch = checkitemlist[index]
+                                device_check_info(logger,device,checkitem,value,checkmatch)
 
     except Exception,ex:
         logging.error("[coolboot]exception fail:%s "%(str(ex)))

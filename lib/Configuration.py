@@ -50,7 +50,6 @@ class Interface(object):
 
     def get_port_interface(self,port_index,port_type,vlan_index,vlan_tagged,port_tagged):
         commandlist = list()
-        commandlist.append("config add interface vlan %s"%(vlan_index))
         commandlist.append("config switch add vlan %s"%(vlan_index))
         if port_type == "app-engine":
             commandlist.append("config switch vlan %s add app-engine 0 port 0"%(vlan_index))
@@ -132,6 +131,33 @@ class Function(object):
                     commandlist.append("config dnat in-interface %s %s translate-to ip %s priority %s"%(interface, interface_index, ip, priority))
 
         return commandlist
+
+    def get_ntp(self,ntp_server_list,ntp_server_prority_list,time_source):
+        commandlist = list()
+        for index ,value in enumerate(ntp_server_list):
+            prority =  ntp_server_prority_list[index]
+            commandlist.append("config ntp server %s priority %s"%(value, prority))
+        commandlist.append("config ntp time-source %s"%(time_source))
+
+        return commandlist
+
+
+
+    def get_service(self,service_name):
+        commandlist = list()
+        commandlist.append("config service %s enable"%(service_name))
+        return commandlist
+
+
+
+
+
+
+
+
+
+
+
 
 
     def get_service_enable(self):
