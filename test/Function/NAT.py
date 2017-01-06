@@ -1,8 +1,11 @@
+__author__ = 'mandy.wu'
 from lib.Device import *
 from lib.Configuration import *
 import logging
 import os
 from time import gmtime, strftime
+import paramiko
+
 
 
 
@@ -20,6 +23,13 @@ def device_check_info(logger, device, checkitem, checkcommand, checkmatch):
     if checkresult == False:
         logger.info("%s check %s error : %s"%(title, checkmatch, device.target_response))
 
+def ssh_check_info(logger, device, checkitem, checkcommand, checkmatch):
+    title = "[%s][%s]"%(checkitem, checkcommand)
+    logger.info("%s starting"%(title))
+    checkresult = device.device_send_command_match(checkcommand, 5, checkmatch)
+    logger.info("%s check %s result : %s"%(title, checkmatch, checkresult))
+    if checkresult == False:
+        logger.info("%s check %s error : %s"%(title, checkmatch, device.target_response))
 
 def NAT_port_setup(device):
     configlist = list()
@@ -163,6 +173,100 @@ def NAT(device):
         checkmatch = checkitemlist[index]
         device_check_info(logger, device, checkitem, value, checkmatch)
 
+def service_enable(device):
+    configlist = list()
+    function = Function("service_enable")
+    configlist.extend(function.get_service_enable())
+    device.device_set_configs(configlist)
+
+    checkitem = "service_enable"
+    logger.info("[%s]Starting"%(checkitem))
+
+
+class SSHConnect_test(object):
+
+    def __init__(self, ipaddress, port, username="root", password="admin", logname="SSHConnect_test"):
+        self.ipaddress = ipaddress
+        self.port = port
+        self.username = username
+        self.password=password
+        self.ssh = paramiko.SSHClient()
+        self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.sshresult = ""
+        self.IsConnect = False
+        #self.IsLogin = False
+        #self.logger = logging.getLogger('%s.ssh'%(logname))
+        #self.logger.info('creating the sub log for SSHConnect')
+
+
+    def connect(self):
+        try:
+            self.ssh.connect(self.ipaddress, port=2222, username=self.username, password=self.password, timeout=int(10))
+            if (self.ssh):
+                self.IsConnect = True
+                print "IsConnect = True"
+            else:
+                self.IsConnect = False
+                print "IsConnect = False"
+
+        except Exception, ex:
+            print "[connect]ssh connect fail:%s" % (str(ex))
+            self.IsConnect = False
+            self.ssh.close()
+
+
+    def __ssh_login(self, remote_conn):
+        #login_result = False
+        response_result = remote_conn.recv(5000)
+        print "ssh status show now: %s" % (response_result)
+        time.sleep(3)
+        if "localhost" in response_result:
+            print "[dnat success] You already login successfully."
+            login_result = True
+        else:
+            if "login" in response_result:
+                remote_conn.send("%s\n" % (self.username))
+                time.sleep(30)
+                response_result = remote_conn.recv(5000)
+                if "password" in response_result:
+                    remote_conn.send("%s\n" % (self.password))
+                    time.sleep(5)
+                    response_result = remote_conn.recv(5000)
+                    if "localhost" in response_result:
+                        print "login success"
+                        #login_result = True
+                    else:
+                        print "password fail"
+                else:
+                    print "username fail"
+            else:
+                print "login fail"
+        #return login_result
+
+
+
+    def ssh_write_command(self, command, timeout, dnat_ip):
+        try:
+            if (self.ssh):
+                remote_conn = self.ssh.invoke_shell()
+                if self.__ssh_login(remote_conn):
+                    time.sleep(timeout)
+                    response_result = remote_conn.recv(5000)
+                    print response_result
+                    '''
+                                        if dnat_ip in response_result:
+                                            print "ip correct and dnat success"
+                                        else:
+                                            print "ip wrong and dnat fail"
+                                        '''
+            else:
+                logger.info("ssh connection not opened")
+        except Exception, ex:
+            logger.info("[ssh_write_command]write command fail:%s " % (str(ex)))
+            self.IsConnect = False
+            self.ssh.close()
+
+
 
 
 def set_log(filename, loggername):
@@ -184,8 +288,10 @@ def set_log(filename, loggername):
     return logger
 
 
+
 #main( connect -> initial setup -> catch config -> compare -> append config -> show and verify)
 if __name__ == '__main__':
+
     logfilename = "NAT%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
     logger = set_log(logfilename, "NAT_testing")
     ip = "10.2.59.160"
@@ -194,6 +300,8 @@ if __name__ == '__main__':
     username = "admin"
     password = "admin"
     device = Device_Tool(ip, port, mode, username, password, "NAT")
+
+
     if device:
         device.device_get_version()
         logger.info("Device Bios Version: %s"%(device.bios_version))
@@ -205,5 +313,16 @@ if __name__ == '__main__':
         NAT_dhcp(device)
         NAT_classifier(device)
         NAT(device)
+        service_enable(device)
 
-        #add "save configuration" command
+
+
+    #dnat_test --> ssh to app-engine
+    #ip_ssh = "10.2.59.160"
+    #port_ssh = 2222
+    logger.info("ssh test starting")
+    sshconnect = SSHConnect_test("10.2.59.160", 2222)
+    sshconnect.connect()
+    if (sshconnect.IsConnect):
+            sshconnect.ssh_write_command("ifconfig", 5, "10.1.4.153")
+
