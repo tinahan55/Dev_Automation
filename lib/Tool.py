@@ -9,12 +9,12 @@ class Network(object):
         self.logger = logging.getLogger('%s.Network_Tool'%(self.logname))
         self.logger.info('creating the sub log for Network_Tool')
 
-    def Host_Ping(hostname):
+    def Host_Ping(self,hostname,times):
         checkstring ='Reply from %s'%(hostname)
         if platform.system() == "Windows":
-            response = os.system("ping "+hostname+" -n 1")
+            response = os.system("ping %s -n %s"%(hostname,times))
         else:
-            response = os.system("ping -c 1 " + hostname)
+            response = os.system("ping -c%s %s "%(times,hostname))
         isUpBool = False
         if response ==0:
             isUpBool = True

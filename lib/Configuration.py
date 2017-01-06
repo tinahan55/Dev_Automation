@@ -141,12 +141,19 @@ class Function(object):
 
         return commandlist
 
-
-
     def get_service(self,service_name):
         commandlist = list()
         commandlist.append("config service %s enable"%(service_name))
         return commandlist
+
+    def get_user(self,user_name,user_password_secret_key,user_role='user'):
+        commandlist = list()
+        commandlist.append("config add user %s password %s"%(user_name,user_password_secret_key))
+        if user_role!="user":
+            commandlist.append("config user %s role %s"%(user_name,user_role))
+        return commandlist
+
+
 
 
 

@@ -26,6 +26,9 @@ class SSHConnect(object):
             time.sleep(1)
             if(self.ssh):
                 self.IsConnect= True
+                remote_conn = self.ssh.invoke_shell()
+                time.sleep(2)
+                self.sshresult = remote_conn.recv(5000)
             else:
                 self.IsConnect =False
             self.logger.info("connect status :%s"%(self.IsConnect))
@@ -93,9 +96,9 @@ class SSHConnect(object):
                     return True
 
             else:
-                self.logging.info("Connection not opened.")
+                self.logger.info("Connection not opened.")
         except Exception,ex:
-            self.logging.error("[write_command]write command fail:%s "%(str(ex)))
+            self.logger.error("[write_command]write command fail:%s "%(str(ex)))
             self.IsConnect =False
             self.ssh.close()
 
@@ -115,7 +118,7 @@ class SSHConnect(object):
                     else:
                         return True
          except Exception,ex:
-             self.logging.error("[write_multip_command_match]write command fail:%s "%(str(ex)))
+             self.logger.error("[write_multip_command_match]write command fail:%s "%(str(ex)))
              return False
 
 
@@ -130,14 +133,15 @@ class SSHConnect(object):
                         remote_conn.send((command + "\n").encode('ascii'))
                         time.sleep(timeout)
                         self.sshresult = remote_conn.recv(5000)
+                        print self.sshresult
                         p = re.compile(result)
                         match = p.search(self.sshresult)
                         if (match == None):
-                            self.logging.error("[write_multip_command_match]command(%s):result(%s)fail:%s "%(command,result))
+                            self.logger.error("[write_multip_command_match]command(%s):result(%s)fail:%s "%(command,result))
                             return False
                     return True
          except Exception,ex:
-            self.logging.error("[write_multip_command_match]write command fail:%s "%(str(ex)))
+            self.logger.error("[write_multip_command_match]write command fail:%s "%(str(ex)))
             return False
 
 

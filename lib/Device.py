@@ -18,13 +18,14 @@ class Device_Tool(object):
         self.logname = logname
         self.logger = logging.getLogger('%s.Device_Tool'%(self.logname))
         self.logger.info('creating the sub log for Device_Tool')
-        self.target = self.device_connect()
         self.target_response = ""
         self.bios_version = ""
         self.boot_image = ""
         self.build_image =""
         self.device_product_name ="LMC-5500-1E8R1H05"
         self.device_set_lilee_mode =False
+        self.target = self.device_connect()
+
 
     def device_connect(self):
         self.target_response =""
@@ -32,6 +33,7 @@ class Device_Tool(object):
             telnet_console =Telnet_Console(self.ipaddress,self.port,self.username,self.password,self.logname)
             result = telnet_console.login()
             if result ==True:
+                self.target_response = self._escape_ansi(telnet_console.telnetresult)
                 return telnet_console
             else:
                 return None
@@ -40,6 +42,7 @@ class Device_Tool(object):
             ssh_console = SSHConnect(self.ipaddress,self.username,self.password,self.logname)
             ssh_console.connect()
             if ssh_console.IsConnect:
+                self.target_response = self._escape_ansi(ssh_console.sshresult)
                 return ssh_console
             else:
                 return None
@@ -52,7 +55,7 @@ class Device_Tool(object):
             if len(filter_result) >0:
                 command_mode = "shell"
             else:
-                lileecommandlist = ["config","update","show","diag","create","yes","no","\x03"]
+                lileecommandlist = ["config","update","show","diag","create","yes","no","\x03","\n"]
                 filter_result =  list(lileecommand for lileecommand in lileecommandlist if lileecommand in command)
                 if len(filter_result) >0:
                     command_mode ='lilee'
