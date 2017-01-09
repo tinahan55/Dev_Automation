@@ -8,8 +8,9 @@ import paramiko
 
 class SSHConnect(object):
 
-    def __init__(self,ipaddress,username="admin",password="admin",logname="SSHConnect"):
+    def __init__(self,ipaddress,port=22,username="admin",password="admin",logname="SSHConnect",timeout=10):
         self.ipaddress = ipaddress
+        self.port =port
         self.username = username
         self.password=password
         self.ssh = paramiko.SSHClient()
@@ -21,7 +22,7 @@ class SSHConnect(object):
 
     def connect(self):
         try:
-            self.ssh.connect(self.ipaddress, port=22, username=self.username, password= self.password, timeout=int(10))
+            self.ssh.connect(self.ipaddress, port=self.port, username=self.username, password= self.password, timeout=int(10))
             self.sshresult = ""
             time.sleep(1)
             if(self.ssh):
@@ -85,9 +86,12 @@ class SSHConnect(object):
         try:
             mode_result = True
             if(self.ssh):
+                #add for nat testing
                 remote_conn = self.ssh.invoke_shell()
-
+                response_result = remote_conn.recv(5000)
+                print response_result
                 if self.__set_command_mode(remote_conn,mode):
+                    #remote_conn.send("%s\n"%(command))
                     remote_conn.send("%s\n"%(command))
                     time.sleep(timeout)
                     self.sshresult = remote_conn.recv(5000)
