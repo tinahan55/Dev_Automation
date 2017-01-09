@@ -320,5 +320,7 @@ if __name__ == '__main__':
     sshconnect = SSHConnect(ip, dport, dnat_username, password, "NAT")
     sshconnect.connect()
     if (sshconnect.IsConnect):
-        sshconnect.write_command("ifconfig", 5, "shell")
+        sshconnect.write_command("ifconfig", 5, mode)
+        print sshconnect.sshresult
+
 
