@@ -323,3 +323,4 @@ if __name__ == '__main__':
     sshconnect.connect()
     if (sshconnect.IsConnect):
         sshconnect.write_command("ifconfig", 5, "shell")
+
