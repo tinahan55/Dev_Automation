@@ -88,8 +88,6 @@ class SSHConnect(object):
             if(self.ssh):
                 #add for nat testing
                 remote_conn = self.ssh.invoke_shell()
-                response_result = remote_conn.recv(5000)
-                print response_result
                 if self.__set_command_mode(remote_conn,mode):
                     #remote_conn.send("%s\n"%(command))
                     remote_conn.send("%s\n"%(command))
