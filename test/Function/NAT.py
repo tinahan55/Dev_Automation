@@ -1,11 +1,9 @@
 __author__ = 'mandy.wu'
 from lib.Device import *
 from lib.Configuration import *
-import logging
 import os
 from time import gmtime, strftime
 from lib.SSHConsole import *
-import paramiko
 
 
 
@@ -288,7 +286,7 @@ if __name__ == '__main__':
     logfilename = "NAT%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
     logger = set_log(logfilename, "NAT_testing")
     ip = "10.2.59.160"
-    port = 0
+    port = 22
     mode = "ssh"
     username = "admin"
     password = "admin"
