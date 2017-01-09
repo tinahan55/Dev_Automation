@@ -39,7 +39,7 @@ class Device_Tool(object):
                 return None
 
         elif self.connecttype == "ssh":
-            ssh_console = SSHConnect(self.ipaddress,self.username,self.password,self.logname)
+            ssh_console = SSHConnect(self.ipaddress,self.port,self.username,self.password,self.logname)
             ssh_console.connect()
             if ssh_console.IsConnect:
                 self.target_response = self._escape_ansi(ssh_console.sshresult)
