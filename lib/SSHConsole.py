@@ -89,7 +89,6 @@ class SSHConnect(object):
                 #add for nat testing
                 remote_conn = self.ssh.invoke_shell()
                 if self.__set_command_mode(remote_conn,mode):
-                    #remote_conn.send("%s\n"%(command))
                     remote_conn.send("%s\n"%(command))
                     time.sleep(timeout)
                     self.sshresult = remote_conn.recv(5000)
