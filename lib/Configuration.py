@@ -153,6 +153,21 @@ class Function(object):
             commandlist.append("config user %s role %s"%(user_name,user_role))
         return commandlist
 
+    def get_route(self, route_type, route_mode, route_ip, route_netmask, gateway, interface, metric, table_index, classifier_index, priority):
+        commandlist =list()
+        if route_type == "ip":
+            if route_mode == "network":
+                commandlist.append("config route ip network %s %s")%(route_ip, route_netmask)
+            else:
+                commandlist.append("config route ip default gateway %s interface %s metric %s")%(gateway, interface, metric)
+        elif route_type == "table":
+            if route_mode == "nework":
+                commandlist.append("config route table %s ip network %s %s")%(table_index, route_ip, route_netmask)
+            else:
+                commandlist.append("config route table %s ip default gateway %s")%(table_index, gateway)
+        commandlist.append("config policy-route classifier %s table %s priority %s")%(classifier_index, table_index, priority)
+
+
 
 
 
