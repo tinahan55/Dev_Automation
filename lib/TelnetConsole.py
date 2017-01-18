@@ -55,6 +55,7 @@ class Telnet_Console(object):
                         self.IsConnect= False
                 else:
                     self.IsConnect= True
+            self.telnetresult = readstring
         except Exception,ex :
             self.logger.error("telnet connect fail:%s"%(str(ex)))
             self.IsConnect= False
