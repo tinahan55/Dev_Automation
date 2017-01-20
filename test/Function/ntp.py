@@ -7,7 +7,6 @@ from time import gmtime, strftime
 
 
 
-
 def set_log(filename,loggername):
     logpath = os.path.join(os.getcwd(), 'log')
     if not os.path.exists(logpath):
@@ -27,7 +26,6 @@ def set_log(filename,loggername):
     return logger
 
 
-
 def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
     title = "[%s][%s]"%(checkitem,checkcommand)
     logger.info("%s starting"%(title))
@@ -38,12 +36,13 @@ def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
 
 
 
+
 logfilename = "ntp%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
 logger = set_log(logfilename,"ntp_testing")
 
 if __name__ == '__main__':
     ip ="192.168.11.114"
-    port = 0
+    port = 22
     mode ="ssh"
     username = "admin"
     password ="admin"

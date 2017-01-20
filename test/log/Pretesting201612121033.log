@@ -1,0 +1,18 @@
+2016-12-12 18:33:42,649 - Pre_Testing.Device_Tool - INFO - creating the sub log for Device_Tool
+2016-12-12 18:33:42,649 - Pre_Testing.ssh - INFO - creating the sub log for SSHConnect
+2016-12-12 18:33:43,907 - Pre_Testing.ssh - INFO - connect status :True
+2016-12-12 18:34:11,984 - Pre_Testing - INFO - Device Bios Version:STS-1000 R1.0
+2016-12-12 18:34:11,984 - Pre_Testing - INFO - Device recovery image:LileeRecovery_3.3_build37
+2016-12-12 18:34:11,984 - Pre_Testing - INFO - Device build image:LileeOS_3.3_build46
+2016-12-12 18:34:19,040 - Pre_Testing.ssh - INFO - u[Jp[Jd[Ja[Jt[Je[J [Jt[Je[Jr[Jm[Ji[Jn[Ja[Jl[J [Jp[Ja[Jg[Ji[Jn[Jg[J [Jd[Ji[Js[Ja[Jb[Jl[Je[J
+localhost.localdomain > [J
+2016-12-12 18:34:26,097 - Pre_Testing.ssh - INFO - c[Jo[Jn[Jf[Ji[Jg[J [Ja[Jp[Jp[J-[Je[Jn[Jg[Ji[Jn[Je[J [J0[J [Jd[Je[Js[Jc[Jr[Ji[Jp[Jt[Ji[Jo[Jn[J [JS[JQ[JA[J
+localhost.localdomain > [J
+2016-12-12 18:34:26,098 - Pre_Testing - INFO - [Pretesting_Appengine]Starting- app engine stop
+2016-12-12 18:34:33,153 - Pre_Testing.ssh - INFO - c[Jo[Jn[Jf[Ji[Jg[J [Ja[Jp[Jp[J-[Je[Jn[Jg[Ji[Jn[Je[J [J0[J [Jd[Ji[Js[Ja[Jb[Jl[Je[J
+localhost.localdomain > [J
+2016-12-12 18:35:03,155 - Pre_Testing - INFO - [Pretesting_Appengine]Starting- app engine start
+2016-12-12 18:35:10,213 - Pre_Testing.ssh - INFO - c[Jo[Jn[Jf[Ji[Jg[J [Ja[Jp[Jp[J-[Je[Jn[Jg[Ji[Jn[Je[J [J0[J [Je[Jn[Ja[Jb[Jl[Je[J
+
+2016-12-12 18:35:40,218 - Pre_Testing - INFO - [Pretesting_Appengine][show app-engine 0 info] starting
+2016-12-12 18:35:52,273 - Pre_Testing - INFO - [Pretesting_Appengine][show app-engine 0 info] check Administrative : Power On | Operational : Running | Description : SQA result :True

@@ -33,7 +33,7 @@ def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
     if checkresult== False:
         logger.info("%s check %s error :%s"%(title,checkmatch,device.target_response))
 
-def check_booting(hostip,check_cycle):
+def  check_booting(hostip,check_cycle):
     k = 0
     while k < check_cycle:
         if networktool.Host_Ping(hostip):
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     logfilename = "coolboot%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
     logger = set_log(logfilename,"cool_boot")
     ip = "10.2.53.158"
-    port = 0
+    port = 22
     mode ="ssh"
     username = "admin"
     password ="admin"

@@ -34,7 +34,7 @@ if __name__ == '__main__':
     logfilename = "RoadTesting%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
     logger = set_log(logfilename,"Pre_Testing")
     ip ="192.168.11.1"
-    port = 0
+    port = 22
     mode ="ssh"
     username = "admin"
     password ="admin"

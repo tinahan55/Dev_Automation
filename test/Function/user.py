@@ -37,7 +37,7 @@ logger = set_log(logfilename,"user_testing")
 
 if __name__ == '__main__':
     ip ="10.2.52.54"
-    port = 0
+    port = 22
     mode ="ssh"
     username = "admin"
     password ="admin"
