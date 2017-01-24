@@ -299,7 +299,7 @@ if __name__ == '__main__':
     #LMS_set_route_table(device_LMS)
 
 
-'''
+
 
     #public route test
     TelnetConsole_DTS = Telnet_Console('10.2.66.50', 2035, "admin", "admin", "Routing_test")
@@ -326,6 +326,6 @@ if __name__ == '__main__':
     if TelnetConsole_LMS:
         TelnetConsole_LMS.send_command("tcpdump -i eth0 icmp",5,"shell",checkResponse="bash-4.2#",logflag = True)
 
-'''
+
 
 
