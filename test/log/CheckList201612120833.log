@@ -1,0 +1,42 @@
+2016-12-12 16:33:59,759 - check_list.Device_Tool - INFO - creating the sub log for Device_Tool
+2016-12-12 16:33:59,759 - check_list.ssh - INFO - creating the sub log for SSHConnect
+2016-12-12 16:34:00,942 - check_list.ssh - INFO - connect status :True
+2016-12-12 16:34:29,021 - check_list - INFO - Device Bios Version:STS-1000 R1.0
+2016-12-12 16:34:29,023 - check_list - INFO - Device recovery image:LileeRecovery_3.3_build37
+2016-12-12 16:34:29,023 - check_list - INFO - Device build image:LileeOS_3.3_build46
+2016-12-12 16:34:29,023 - check_list - INFO - Disable App Engine to wait 30 seconds
+2016-12-12 16:34:36,078 - check_list.ssh - INFO - c[Jo[Jn[Jf[Ji[Jg[J [Ja[Jp[Jp[J-[Je[Jn[Jg[Ji[Jn[Je[J [J0[J [Jd[Ji[Js[Ja[Jb[Jl[Je[J
+localhost.localdomain > [J
+2016-12-12 16:35:06,084 - check_list - INFO - [device_check_cellular]Starting
+2016-12-12 16:35:06,085 - check_list - INFO - [device_check_cellular][slotmapping -l] starting
+2016-12-12 16:35:22,149 - check_list - INFO - [device_check_cellular][slotmapping -l] check usb1 result :True
+2016-12-12 16:35:22,150 - check_list - INFO - [device_check_cellular][slotmapping -l] starting
+2016-12-12 16:35:38,211 - check_list - INFO - [device_check_cellular][slotmapping -l] check usb2 result :True
+2016-12-12 16:35:38,211 - check_list - INFO - [device_check_cellular][show line cellular all] starting
+2016-12-12 16:35:50,263 - check_list - INFO - [device_check_cellular][show line cellular all] check cellular (.*) 0 result :True
+2016-12-12 16:35:50,264 - check_list - INFO - [device_check_wifi]Starting
+2016-12-12 16:35:50,264 - check_list - INFO - [device_check_wifi][ifconfig -a] starting
+2016-12-12 16:36:06,321 - check_list - INFO - [device_check_wifi][ifconfig -a] check wlan0 result :True
+2016-12-12 16:36:06,322 - check_list - INFO - [device_check_wifi][ifconfig -a] starting
+2016-12-12 16:36:22,385 - check_list - INFO - [device_check_wifi][ifconfig -a] check wlan1 result :True
+2016-12-12 16:36:22,386 - check_list - INFO - [check_service_status]Starting
+2016-12-12 16:36:22,386 - check_list - INFO - [check_service_status][show service all] starting
+2016-12-12 16:36:34,441 - check_list - INFO - [check_service_status][show service all] check fcapsd (.*) Started result :True
+2016-12-12 16:36:34,441 - check_list - INFO - [check_service_status][show service all] starting
+2016-12-12 16:36:46,497 - check_list - INFO - [check_service_status][show service all] check platformd (.*) Started result :True
+2016-12-12 16:36:46,499 - check_list - INFO - [check_service_status][show service all] starting
+2016-12-12 16:36:58,560 - check_list - INFO - [check_service_status][show service all] check imgupd_updater (.*) Started result :True
+2016-12-12 16:36:58,561 - check_list - INFO - [check_service_status][show service all] starting
+2016-12-12 16:37:10,622 - check_list - INFO - [check_service_status][show service all] check gpsd (.*) Started result :True
+2016-12-12 16:37:10,622 - check_list - INFO - [check_disk_status]Starting
+2016-12-12 16:37:10,622 - check_list - INFO - [check_disk_status][cat /proc/partitions] starting
+2016-12-12 16:37:26,682 - check_list - INFO - [check_disk_status][cat /proc/partitions] check sda result :True
+2016-12-12 16:37:26,683 - check_list - INFO - [check_disk_status][cat /proc/partitions] starting
+2016-12-12 16:37:42,746 - check_list - INFO - [check_disk_status][cat /proc/partitions] check sdb result :True
+2016-12-12 16:37:42,746 - check_list - INFO - [check_disk_status][cat /proc/partitions] starting
+2016-12-12 16:37:58,801 - check_list - INFO - [check_disk_status][cat /proc/partitions] check sdc result :True
+2016-12-12 16:37:58,801 - check_list - INFO - [check_odb2_status]Starting
+2016-12-12 16:37:58,801 - check_list - INFO - [check_odb2_status][hexdump /dev/ttyS3] starting
+2016-12-12 16:38:14,868 - check_list - INFO - [check_odb2_status][hexdump /dev/ttyS3] check 1710 result :False
+2016-12-12 16:38:14,868 - check_list - INFO - [check_odb2_status][hexdump /dev/ttyS3] check 1710 error :hexdump /dev/ttyS3
+

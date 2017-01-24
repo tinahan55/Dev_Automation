@@ -6,24 +6,22 @@ class dhcppool(object):
         self.pool_start_ip =pool_start_ip
         self.pool_end_ip = pool_end_ip
         self.netmask = netmask
-        self.default_gatway =default_gatway
+        self.default_gateway =default_gatway
         self.dns_server_list = list()
         self.dns_priority_list = list()
         self.interface = None
         self.configlist = list()
+        self.function = Function("dhcppool")
         self.__set_pool()
 
     def __set_pool(self):
-        function = Function("dhcppool")
-        self.configlist.extend(function.get_dhcp_pool(self.pool_name, self.pool_start_ip, self.pool_end_ip, self.netmask, self.default_gateway))
+        self.configlist.extend(self.function.get_dhcp_pool(self.pool_name, self.pool_start_ip, self.pool_end_ip, self.netmask, self.default_gateway))
 
     def get_pool_dns(self,dns_server_list,dns_priority_list):
-        function = Function("dhcp")
-        self.configlist.extend(function.set_dhcp_pool_dns(self.pool_name, dns_server_list , dns_priority_list))
+        self.configlist.extend(self.function.set_dhcp_pool_dns(self.pool_name, dns_server_list , dns_priority_list))
 
     def get_pool_to_interface(self,inteface):
-        function = Function("dhcp")
-        self.configlist.extend(function.set_dhcp_pool_interface(self.pool_name,inteface))
+        self.configlist.extend(self.function.set_dhcp_pool_interface(self.pool_name,inteface))
 
 class classifier(object):
     def __init__(self,index):

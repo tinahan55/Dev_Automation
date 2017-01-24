@@ -4,7 +4,6 @@ import logging
 import os
 from time import gmtime, strftime
 
-
 def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
     title = "[%s][%s]"%(checkitem,checkcommand)
     logger.info("%s starting"%(title))
@@ -15,28 +14,50 @@ def device_check_info(logger,device,checkitem,checkcommand,checkmatch):
 
 def Pretesting_Cellular(device):
     configlist = list()
-    profile_name ="twe"
-    access_name = "internet"
-    dialer_index = 0
-    cellular_index = 0
-    dialer_carrier = "TWM"
-    cellular_usb_index="usb1"
+    profile0_name ="cht"
+    access0_name = "internet"
+    dialer0_index = 0
+    cellular0_index = 0
+    dialer0_carrier = "Chunghwa"
+    cellular0_usb_index="usb1"
+
+    profile1_name ="twe"
+    access1_name="internet"
+    dialer1_index =1
+    cellular1_index = 1
+    dialer1_carrier="TWM"
+    cellular1_usb_index="usb2"
 
 
     profile = Profile("Celluar")
-    configlist.extend(profile.get_cellular_profile(profile_name,access_name))
+    configlist.extend(profile.get_cellular_profile(profile0_name,access0_name))
+    configlist.extend(profile.get_cellular_profile(profile1_name,access1_name))
+
     interface = Interface("Celluar")
-    configlist.extend(interface.get_dialer_interface(dialer_index,profile_name,cellular_index))
+    configlist.extend(interface.get_dialer_interface(dialer0_index,profile0_name,cellular0_index))
+    configlist.extend(interface.get_dialer_interface(dialer1_index,profile1_name,cellular1_index))
     device.device_set_configs(configlist)
+    time.sleep(30)
 
     checkitem ="Pretesting_Cellular"
-    checkcommandlist = ["show cellular-profile %s"%(profile_name),"show platform led","show interface all","show interface dialer %s detail"%(dialer_index),"show sim-management current-status"
-        ,"ping -I %s -c5 8.8.8.8"%(cellular_usb_index)]
+    checkcommandlist = ["show cellular-profile %s"%(profile0_name),"show platform led","show interface all","show interface dialer %s detail"%(dialer0_index),"show sim-management current-status"
+        ,"ping -I %s -c5 8.8.8.8"%(cellular0_usb_index)]
 
-    checkitemlist = ["Line Index : %s"%(cellular_index),"LTE%s (.*) green"%(cellular_index),"dialer %s (.*) up"%(dialer_index)
-       ,"Operational : up | MTU : 1500","dialer %s (.*) %s (.*)"%(dialer_index,dialer_carrier),"64 bytes from 8.8.8.8: icmp_seq=5 (.*)"]
+    checkitemlist = ["Access Point Name (.*) %s"%(access0_name) ,"LTE%s (.*) green"%(cellular0_index),"dialer %s (.*) up"%(dialer0_index)
+       ,"Operational : up | MTU : 1500","dialer %s (.*) %s (.*)"%(dialer0_index,dialer0_carrier),"64 bytes from 8.8.8.8: icmp_seq=5 (.*)"]
 
     logger.info("[%s]Starting"%(checkitem))
+    for index,value in enumerate(checkcommandlist):
+        checkmatch = checkitemlist[index]
+        device_check_info(logger,device,checkitem,value,checkmatch)
+
+
+    checkcommandlist = ["show cellular-profile %s"%(profile1_name),"show platform led","show interface all","show interface dialer %s detail"%(dialer1_index),"show sim-management current-status"
+        ,"ping -I %s -c5 8.8.8.8"%(cellular1_usb_index)]
+
+    checkitemlist = ["Access Point Name (.*) %s"%(access1_name) ,"LTE%s (.*) green"%(cellular1_index),"dialer %s (.*) up"%(dialer1_index)
+       ,"Operational : up | MTU : 1500","dialer %s (.*) %s (.*)"%(dialer1_index,dialer1_carrier),"64 bytes from 8.8.8.8: icmp_seq=5 (.*)"]
+
     for index,value in enumerate(checkcommandlist):
         checkmatch = checkitemlist[index]
         device_check_info(logger,device,checkitem,value,checkmatch)
@@ -44,9 +65,9 @@ def Pretesting_Cellular(device):
 def Pretesting_Wifi(device):
     configlist = list()
     ap_profile_name ="ap-profile"
-    sta_profile_name ="station-profile"
+    sta_profile_name ="eap-peap"
     ap_ssid_name = "auto-testing"
-    sta_ssid_name ="SQA_Test-AC-5G"
+    sta_ssid_name ="SQA-STA-EAP-2.4G"
     wlan0_index = 0
     wlan0_mode = "ap"
     wlan0_ip_mode ="static"
@@ -54,13 +75,24 @@ def Pretesting_Wifi(device):
     wlan1_index = 1
     wlan1_mode = "sta"
     wlan1_ip_mode="dhcp"
-    key_type = "wpa-psk"
-    wpa_version = "auto"
-    wpa_key="lilee~1234"
+
+
+    #### wpa-psk setting
+    ap_key_type = "wpa-psk"
+    ap_wpa_version = "auto"
+    ap_wpa_key="lilee~1234"
+
+    #### wpa-eap setting.
+    sta_key_type = "wpa-eap"
+    sta_wpa_version = "2"
+    sta_auth_type ="sta-eap"
+    sta_eap_type ="peap"
+    sta_eap_identity ="lance"
+    sta_eap_password = "lance0124"
 
 
     profile = Profile("Wifi")
-    configlist.extend(profile.get_wifi_profile(ap_profile_name,ap_ssid_name,key_type,wpa_version,wpa_key))
+    configlist.extend(profile.get_wifi_profile(ap_profile_name,ap_ssid_name,ap_key_type,ap_wpa_version,ap_wpa_key))
 
     interface = Interface("wifi")
     configlist.extend(interface.get_wifi_interface(wlan0_index,ap_profile_name,wlan0_mode,wlan0_ip_mode))
@@ -70,7 +102,7 @@ def Pretesting_Wifi(device):
 
     checkcommandlist = ["show wifi-profile %s"%(ap_profile_name),"show platform led","show interface all"
         ,"show interface wlan %s detail"%(wlan0_index)]
-    checkitemlist = ["SSID : %s | WPA PSK : %s"%(ap_ssid_name,wpa_key),"WLAN%s (.*) green"%(wlan0_index),"wlan %s (.*) %s (.*) up"%(wlan0_index,wlan0_ip_address)
+    checkitemlist = ["SSID : %s | WPA PSK : WPA PSK"%(ap_ssid_name),"WLAN%s (.*) green"%(wlan0_index),"wlan %s (.*) %s (.*) up"%(wlan0_index,wlan0_ip_address)
         ,"Operational : up | MTU : 1500"]
 
     logger.info("[%s]Starting"%(checkitem))
@@ -80,7 +112,8 @@ def Pretesting_Wifi(device):
 
 
     profile = Profile("Wifi")
-    configlist.extend(profile.get_wifi_profile(sta_profile_name,sta_ssid_name,key_type,wpa_version,wpa_key))
+    configlist.extend(profile.get_wifi_profile(sta_profile_name,sta_ssid_name,sta_key_type
+                                               ,sta_wpa_version,"",sta_auth_type))
 
     interface = Interface("wifi")
     configlist.extend(interface.get_wifi_interface(wlan1_index,sta_profile_name,wlan1_mode,wlan1_ip_mode))
@@ -90,7 +123,7 @@ def Pretesting_Wifi(device):
 
     checkcommandlist = ["show wifi-profile %s"%(sta_profile_name),"show platform led","show interface all"
         ,"show interface wlan %s detail"%(wlan0_index)]
-    checkitemlist = ["SSID : %s | WPA PSK : %s"%(ap_ssid_name,wpa_key),"WLAN%s (.*) green"%(wlan0_index),"wlan %s (.*) up"%(wlan0_index)
+    checkitemlist = ["SSID : %s | WPA PSK : %s"%(ap_ssid_name,sta_key_type),"WLAN%s (.*) green"%(wlan1_index),"wlan %s (.*) up"%(wlan1_index)
         ,"Operational : up | MTU : 1500"]
 
     logger.info("[%s]Starting"%(checkitem))
@@ -121,7 +154,6 @@ def Pretesting_GPS(device):
     for index,value in enumerate(checkcommandlist):
         checkmatch = checkitemlist[index]
         device_check_info(logger,device,checkitem,value,checkmatch)
-
 
 def Pretesting_Appengine(device):
     checkitem ="Pretesting_Appengine"
@@ -166,8 +198,8 @@ def set_log(filename,loggername):
 if __name__ == '__main__':
     logfilename = "Pretesting%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
     logger = set_log(logfilename,"Pre_Testing")
-    ip ="10.2.52.51"
-    port = 0
+    ip ="10.2.52.54"
+    port = 22
     mode ="ssh"
     username = "admin"
     password ="admin"
@@ -179,14 +211,13 @@ if __name__ == '__main__':
         logger.info("Device build image:%s"%(device.build_image))
         device.device_send_command("update terminal paging disable")
 
+        Pretesting_Cellular(device)
 
-        #Pretesting_Cellular(device)
+        Pretesting_Wifi(device)
 
-        #Pretesting_Wifi(device)
+        Pretesting_Poe(device)
 
-
-        #Pretesting_Poe(device)
-
-        #Pretesting_GPS(device)
+        Pretesting_GPS(device)
 
         Pretesting_Appengine(device)
+
