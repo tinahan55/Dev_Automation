@@ -84,22 +84,22 @@ def LMS_set_vlan_port(device_LMS):
         vlan_tagged = "untagged"
         port_tagged = "untagged"
 
-        for index1, vlan_index in enumerate(vlan_index_list):
-            for index2,port_index in enumerate(port_index_list):
-                if index1 == index2:
-                    function = Function("LMS_vlan")
-                    configlist.extend(function.get_vlan(vlan_index, vlan_description_list[index1], ip_mode, ipaddress_list[index1], netmask))
-                    interface = Interface("LMS_port")
-                    configlist.extend(interface.get_port_interface(port_index_list[1], port_type, vlan_index_list[index1], vlan_tagged, port_tagged))
-                    device_LMS.device_set_configs(configlist)
-                    #check_config
-                    checkitem = "LMS_set_vlan_port"
-                    checkcommandlist = ["show interface all", "show interface vlan %s detail"%(vlan_index_list[index1])]
-                    checkitemlist = ["vlan %s"%(vlan_index_list[index1]), "IP address : %s"%(ipaddress_list[index1])]
-                    logger.info("[%s]Starting" % (checkitem))
-                    for index, value in enumerate(checkcommandlist):
-                        checkmatch = checkitemlist[index]
-                        device_check_info(logger, device_LMS, checkitem, value, checkmatch)
+        for index, vlan_index in enumerate(vlan_index_list):
+            function = Function("LMS_vlan")
+            configlist.extend(function.get_vlan(vlan_index, vlan_description_list[index], ip_mode, ipaddress_list[index], netmask))
+            interface = Interface("LMS_port")
+            configlist.extend(interface.get_port_interface(port_index_list[index], port_type, vlan_index_list[index], vlan_tagged, port_tagged))
+
+            device_LMS.device_set_configs(configlist)
+
+            # check_config
+            checkitem = "LMS_set_vlan_port"
+            checkcommandlist = ["show interface all", "show interface vlan %s detail"%(vlan_index_list[index])]
+            checkitemlist = ["vlan %s"%(vlan_index_list[index]), "%s"%(ipaddress_list[index])]
+            logger.info("[%s]Starting" % (checkitem))
+            for index, value in enumerate(checkcommandlist):
+                checkmatch = checkitemlist[index]
+                device_check_info(logger, device_LMS, checkitem, value, checkmatch)
 
 
         '''
@@ -149,7 +149,7 @@ def LMS_set_dialer(device_LMS):
         logger.info("[%s]Starting"%(checkitem))
         for index, value in enumerate(checkcommandlist):
             checkmatch = checkitemlist[index]
-            device_check_info(logger, device, checkitem, value, checkmatch)
+            device_check_info(logger, device_LMS, checkitem, value, checkmatch)
 
 def LMS_set_classifier(device_LMS):
         configlist= list()
@@ -162,20 +162,20 @@ def LMS_set_classifier(device_LMS):
         port_no = 0
         ip_address_list = ["192.168.10.0/24","192.168.20.0/24"]
 
-        for index1, classifier_index in enumerate(index_list):
-            for index2, description in enumerate(description_list):
-                if index1 == index2:
-                    classifier = Function("Classifier")
-                    configlist.extend(classifier.get_classifier(index_list[index1],description_list[index1],ip_type, protocol_type, port_mode, port_no,ip_address_list[index1]))
-                    device_LMS.device_set_configs(configlist)
-                    #check_config
-                    checkitem = "LMS_set_classifier"
-                    checkcommandlist = ["show classifier %s"%(index_list[index1])]
-                    checkitemlist = ["Classifier ID : %s"%(index_list[index1])]
-                    logger.info("[%s]Starting"%(checkitem))
-                    for index, value in enumerate(checkcommandlist):
-                        checkmatch = checkitemlist[index]
-                        device_check_info(logger, device_LMS, checkitem, value, checkmatch)
+        for index, classifier_index in enumerate(index_list):
+            classifier = Function("Classifier")
+            configlist.extend(classifier.get_classifier(index_list[index],description_list[index],ip_type, protocol_type, port_mode, port_no,ip_address_list[index]))
+
+            device_LMS.device_set_configs(configlist)
+
+            #check_config
+            checkitem = "LMS_set_classifier"
+            checkcommandlist = ["show classifier %s"%(index_list[index])]
+            checkitemlist = ["Classifier ID : %s"%(index_list[index])]
+            logger.info("[%s]Starting"%(checkitem))
+            for index, value in enumerate(checkcommandlist):
+                checkmatch = checkitemlist[index]
+                device_check_info(logger, device_LMS, checkitem, value, checkmatch)
 
 
         '''
@@ -210,20 +210,20 @@ def LMS_set_route_table(device_LMS):
         classifier_index_list = [10,20]
         priority_list = [1,2]
 
-        for index1, gateway in enumerate(gateway_list):
-            for index2, table_index in enumerate(table_index_list):
-                if index1 == index2:
-                    route = Function("Route")
-                    configlist.extend(route.get_route(route_type, route_mode, route_ip, route_netmask, gateway_list[index1], interface, metric, table_index_list[index1], classifier_index_list[index1], priority_list[index1]))
-                    device_LMS.device_set_configs(configlist)
-                    #check_config
-                    checkitem = "LMS_route_table"
-                    checkcommandlist = ["show route table all"]
-                    checkitemlist = ["%s"%(table_index_list[index1])]
-                    logger.info("[%s]Starting"%(checkitem))
-                    for index, value in enumerate(checkcommandlist):
-                        checkmatch = checkitemlist[index]
-                        device_check_info(logger, device_LMS, checkitem, value, checkmatch)
+        for index, gateway in enumerate(gateway_list):
+            route = Function("Route")
+            configlist.extend(route.get_route(route_type, route_mode, route_ip, route_netmask, gateway_list[index], interface, metric, table_index_list[index], classifier_index_list[index], priority_list[index]))
+
+            device_LMS.device_set_configs(configlist)
+
+            #check_config
+            checkitem = "LMS_route_table"
+            checkcommandlist = ["show route table all"]
+            checkitemlist = ["%s"%(table_index_list[index])]
+            logger.info("[%s]Starting"%(checkitem))
+            for index, value in enumerate(checkcommandlist):
+                checkmatch = checkitemlist[index]
+                device_check_info(logger, device_LMS, checkitem, value, checkmatch)
 
 
 
@@ -278,25 +278,25 @@ if __name__ == '__main__':
     logfilename = "Routing%s.log"%((strftime("%Y%m%d%H%M", gmtime())))
     logger = set_log(logfilename, "Routing_test")
 
-    #device_DTS = Device_Tool('10.2.66.50', 2035, "telnet", "admin", "admin", "Routing_test")
-    #if device_DTS:
-        #print "DTS connected"
-        #DTS_config(device_DTS)
+    device_DTS = Device_Tool('10.2.66.50', 2035, "telnet", "admin", "admin", "Routing_test")
+    if device_DTS:
+        print "DTS connected"
+        DTS_config(device_DTS)
 
 
-    #device_STS = Device_Tool('10.2.66.50', 2040, "telnet", "admin", "admin", "Routing_test")
-    #if device_STS:
-        #print "STS connected"
-        #STS_config(device_STS)
+    device_STS = Device_Tool('10.2.66.50', 2040, "telnet", "admin", "admin", "Routing_test")
+    if device_STS:
+        print "STS connected"
+        STS_config(device_STS)
 
 
     device_LMS = Device_Tool('10.2.66.50', 2038, "telnet", "admin", "admin", "Routing_test")
     if device_LMS:
         print "LMS connected"
-    LMS_set_vlan_port(device_LMS)
-    #LMS_set_dialer(device_LMS)
-    #LMS_set_classifier(device_LMS)
-    #LMS_set_route_table(device_LMS)
+        LMS_set_vlan_port(device_LMS)
+        LMS_set_dialer(device_LMS)
+        LMS_set_classifier(device_LMS)
+        LMS_set_route_table(device_LMS)
 
 
 
