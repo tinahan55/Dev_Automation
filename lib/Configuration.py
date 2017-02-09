@@ -168,15 +168,17 @@ class Function(object):
         commandlist =list()
         if route_type == "ip":
             if route_mode == "network":
-                commandlist.append("config route ip network %s %s")%(route_ip, route_netmask)
+                commandlist.append("config route ip network %s %s"%(route_ip, route_netmask))
             else:
-                commandlist.append("config route ip default gateway %s interface %s metric %s")%(gateway, interface, metric)
+                commandlist.append("config route ip default gateway %s interface %s metric %s"%(gateway, interface, metric))
         elif route_type == "table":
-            if route_mode == "nework":
-                commandlist.append("config route table %s ip network %s %s")%(table_index, route_ip, route_netmask)
+            if route_mode == "network":
+                commandlist.append("config route table %s ip network %s %s"%(table_index, route_ip, route_netmask))
             else:
-                commandlist.append("config route table %s ip default gateway %s")%(table_index, gateway)
-        commandlist.append("config policy-route classifier %s table %s priority %s")%(classifier_index, table_index, priority)
+                commandlist.append("config route table %s ip default gateway %s"%(table_index, gateway))
+        commandlist.append("config policy-route classifier %s table %s priority %s"%(classifier_index, table_index, priority))
+
+        return commandlist
 
 
 
