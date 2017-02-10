@@ -75,7 +75,7 @@ class Device_Tool(object):
         command_mode =self.__device_check_mode(command)
         if self.connecttype == "telnet":
             if self.target!=None:
-                commandresult = self.target.send_command(command,timeout,command_mode)
+                #commandresult = self.target.send_command(command,timeout,command_mode)
                 self.target_response = self._escape_ansi(self.target.telnetresult)
 
         elif self.connecttype =="ssh":
