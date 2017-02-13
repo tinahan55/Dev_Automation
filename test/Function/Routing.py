@@ -90,12 +90,13 @@ def LMS_set_vlan_port(device_LMS):
             interface = Interface("LMS_port")
             configlist.extend(interface.get_port_interface(port_index_list[index], port_type, vlan_index_list[index], vlan_tagged, port_tagged))
 
+
             device_LMS.device_set_configs(configlist)
 
             # check_config
             checkitem = "LMS_set_vlan_port"
             checkcommandlist = ["show interface all", "show interface vlan %s detail"%(vlan_index_list[index])]
-            checkitemlist = ["vlan %s"%(vlan_index_list[index]), "%s"%(ipaddress_list[index])]
+            checkitemlist = ["vlan %s"%(vlan_index_list[index]), "IP address : %s"%(ipaddress_list[index])]
             logger.info("[%s]Starting" % (checkitem))
             for index, value in enumerate(checkcommandlist):
                 checkmatch = checkitemlist[index]
@@ -203,7 +204,7 @@ def LMS_set_route_table(device_LMS):
         route_mode = "default "
         route_ip = 0
         route_netmask = 0
-        gateway_list = ["10.163.43.141","10.2.66.1"]
+        gateway_list = ["100.92.6.80","10.2.66.1"]
         interface = 0
         metric = 0
         table_index_list = [10,20]
@@ -248,9 +249,6 @@ def LMS_set_route_table(device_LMS):
                 route_2 = Function("Route_2")
                 configlist.extend(route_2.get_route(route_type, route_mode, route_ip, route_netmask, gateway_2, interface, metric, table_index_2, classifier_index_2, priority_2))
                 '''
-
-
-
 
 
 
@@ -302,29 +300,35 @@ if __name__ == '__main__':
 
 
     #public route test
+    print "public route test starting"
     TelnetConsole_DTS = Telnet_Console('10.2.66.50', 2035, "admin", "admin", "Routing_test")
     TelnetConsole_DTS.login()
     if TelnetConsole_DTS:
+        TelnetConsole_DTS.send_command("no config interface maintenance 0 enable", 5, "lilee",checkResponse="localdomain", logflag=True)
         TelnetConsole_DTS.send_command("ping 8.8.8.8",5,"lilee",checkResponse="localdomain",logflag = True)
 
     TelnetConsole_LMS = Telnet_Console('10.2.66.50', 2038, "admin", "admin", "Routing_test")
     TelnetConsole_LMS.login()
     if TelnetConsole_LMS:
-        TelnetConsole_LMS.send_command("tcpdump -i eth0 icmp", 5, "shell", checkResponse="bash-4.2#", logflag=True)
+        TelnetConsole_LMS.send_command("tcpdump -i usb1 icmp", 5, "shell", checkResponse="bash-4.2#", logflag=True)
+        TelnetConsole_LMS.telnet.write(("\x03").encode('ascii'))
 
 
 
     #internal route test
+    print "internal route test starting"
     TelnetConsole_STS = Telnet_Console('10.2.66.50', 2040, "admin", "admin", "Routing_test")
     TelnetConsole_STS.login()
     if TelnetConsole_STS:
         TelnetConsole_STS.send_command("no config interface maintenance 0 enable",5,"lilee",checkResponse="localdomain",logflag = True)
         TelnetConsole_STS.send_command("ping 10.2.66.1",5,"lilee",checkResponse="localdomain",logflag = True)
 
+
     TelnetConsole_LMS = Telnet_Console('10.2.66.50', 2038, "admin", "admin", "Routing_test")
     TelnetConsole_LMS.login()
     if TelnetConsole_LMS:
         TelnetConsole_LMS.send_command("tcpdump -i eth0 icmp",5,"shell",checkResponse="bash-4.2#",logflag = True)
+        TelnetConsole_LMS.telnet.write(("\x03").encode('ascii'))
 
 
 
