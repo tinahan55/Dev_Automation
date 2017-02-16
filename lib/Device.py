@@ -171,6 +171,24 @@ class Device_Tool(object):
 
 
 
+    def device_get_response(self, command):
+        timeout = 5
+        commandresult = False
+        command_mode = self.__device_check_mode(command)
+        if self.connecttype == "telnet":
+            if self.target != None:
+                commandresult = self.target.send_command(command, timeout, command_mode)
+                self.target_response = self._escape_ansi(self.target.telnetresult)
+                return self.target_response
+        elif self.connecttype == "ssh":
+            if self.target != None:
+                commandresult = self.target.write_command(command, timeout, command_mode)
+                self.target_response = self._escape_ansi(self.target.sshresult)
+                return self.target_response
+        #return commandresult
+
+
+
 
 def set_log(filename,loggername):
     logger = logging.getLogger(loggername)
