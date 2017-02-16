@@ -13,15 +13,16 @@ def device_check_info(logger, device, checkitem, checkcommand, checkmatch):
     if checkresult == False:
         logger.info("%s check %s error: %s" % (title, checkmatch, device.target_response))
 
-def get_platform():
-    DTS_port = 2035
-    STS_port = 2040
-    LMS_port = 2038
-    port_list = [DTS_port, STS_port, LMS_port]
-    device = Device_Tool("10.2.66.50", port_list[index], "telnet", "admin", "admin", "Routing_test")
-    platform = device.device_get_platform("show platform type")
+def get_platform(device, port_index_type1,port_index_type2):
+    platform = device.device_get_response("show platform type")
     print platform
+    #Due to LMS's port type is different from DTS/STS, we get platform to decide port type
+    if "DTS" in platform or "STS" in platform:
+        port_index = port_index_type1
+    else:
+        port_index = port_index_type2
 
+    return port_index
 
 
 def DTS_config(device):
@@ -33,23 +34,13 @@ def DTS_config(device):
     ipaddress = "192.168.10.1"
     netmask = "255.255.255.0"
     # port
-    port_index = 1
+    port_index_type1 = 1
+    port_index_type2 = "2/1"
     port_type = "port"
     vlan_tagged = "untagged"
     port_tagged = "untagged"
-
-    #get_platform()
-
-    '''
-    platform = device_DTS.device_get_platform("show platform type")
-    print platform
-    if "DTS" in platform:
-        print "device = DTS"
-    elif "STS" in platform:
-        print "device = STS"
-    elif "LMS" in platform:
-        print "device = LMS"
-    '''
+    #get platform to decide port type
+    port_index = get_platform(device,port_index_type1,port_index_type2)
 
     function_dts = Function("DTS_vlan")
     configlist.extend(function_dts.get_vlan(vlan_index, vlan_description, ip_mode, ipaddress, netmask))
@@ -65,9 +56,6 @@ def DTS_config(device):
         checkmatch = checkitemlist[index]
         device_check_info(logger, device, checkitem, value, checkmatch)
 
-
-
-
 def STS_config(device):
     configlist = list()
     # vlan
@@ -77,10 +65,13 @@ def STS_config(device):
     ipaddress = "192.168.20.1"
     netmask = "255.255.255.0"
     # port
-    port_index = 2
+    port_index_type1 = 2
+    port_index_type2 = "2/2"
     port_type = "port"
     vlan_tagged = "untagged"
     port_tagged = "untagged"
+    # get platform to decide port type
+    port_index = get_platform(device, port_index_type1, port_index_type2)
 
     function_sts = Function("STS_vlan")
     configlist.extend(function_sts.get_vlan(vlan_index, vlan_description, ip_mode, ipaddress, netmask))
@@ -105,19 +96,19 @@ def LMS_set_vlan_port(device):
     ip_mode = "static"
     ipaddress_list = ["192.168.10.254", "192.168.20.254"]
     netmask = "255.255.255.0"
-    port_index_list = ["2/1", "2/2"]
+    port_index_type1 = [1, 2]
+    port_index_type2 = ["2/1", "2/2"]
     port_type = "port"
     vlan_tagged = "untagged"
     port_tagged = "untagged"
+    # get platform to decide port type
+    port_index = get_platform(device, port_index_type1, port_index_type2)
 
     for index, vlan_index in enumerate(vlan_index_list):
         function = Function("LMS_vlan")
-        configlist.extend(
-            function.get_vlan(vlan_index, vlan_description_list[index], ip_mode, ipaddress_list[index], netmask))
+        configlist.extend(function.get_vlan(vlan_index, vlan_description_list[index], ip_mode, ipaddress_list[index], netmask))
         interface = Interface("LMS_port")
-        configlist.extend(
-            interface.get_port_interface(port_index_list[index], port_type, vlan_index_list[index], vlan_tagged,
-                                         port_tagged))
+        configlist.extend(interface.get_port_interface(port_index[index], port_type, vlan_index_list[index], vlan_tagged,port_tagged))
 
         device.device_set_configs(configlist)
 
@@ -129,32 +120,6 @@ def LMS_set_vlan_port(device):
         for index, value in enumerate(checkcommandlist):
             checkmatch = checkitemlist[index]
             device_check_info(logger, device, checkitem, value, checkmatch)
-
-    '''
-                        vlan_index_1 = 10
-                        vlan_index_2 = 20
-                        vlan_description_1 = "LMS_vlan10"
-                        vlan_description_2 = "LMS_vlan20"
-                        ip_mode = "static"
-                        ipaddress_1 = "192.168.10.254"
-                        ipaddress_2 = "192.168.20.254"
-                        netmask = "255.255.255.0"
-                        port_index_1 = "2/1"
-                        port_index_2 = "2/2"
-                        port_type = "port"
-                        vlan_tagged = "untagged"
-                        port_tagged = "untagged"
-
-                        function_lms_1 = Function("LMS_vlan_1")
-                        configlist.extend(function_lms_1.get_vlan(vlan_index_1, vlan_description_1, ip_mode, ipaddress_1, netmask))
-                        interface_lms_1 = Interface("LMS_port_1")
-                        configlist.extend(interface_lms_1.get_port_interface(port_index_1, port_type, vlan_index_1, vlan_tagged, port_tagged))
-
-                        function_lms_2 = Function("LMS_vlan_2")
-                        configlist.extend(function_lms_2.get_vlan(vlan_index_2, vlan_description_2, ip_mode, ipaddress_2, netmask))
-                        interface_lms_2 = Interface("LMS_port_2")
-                        configlist.extend(interface_lms_2.get_port_interface(port_index_2, port_type, vlan_index_2, vlan_tagged, port_tagged))
-        '''
 
 
 def LMS_set_dialer(device):
@@ -208,24 +173,6 @@ def LMS_set_classifier(device):
             device_check_info(logger, device, checkitem, value, checkmatch)
 
 
-        '''
-                index_1 = 10
-                index_2 = 20
-                description_1 = "DTS-1 to dialer"
-                description_2 = "STS-1 to maintenance network"
-                ip_type = "source"
-                protocol_type = 0
-                port_mode = 0
-                port_no = 0
-                ip_address_1 = "192.168.10.0/24"
-                ip_address_2 = "192.168.20.0/24"
-
-                classifier_10 = Function("Classifier_10")
-                configlist.extend(classifier_10.get_classifier(index_1, description_1, ip_type, protocol_type, port_mode, port_no,ip_address_1))
-                classifier_20 = Function("Classifier_20")
-                configlist.extend(classifier_20.get_classifier(index_2, description_2, ip_type, protocol_type, port_mode, port_no,ip_address_2))
-                '''
-
 def LMS_set_route_table(device):
     configlist = list()
     # route table
@@ -257,31 +204,6 @@ def LMS_set_route_table(device):
 
 
 
-        '''
-                route_type = "table"
-                route_mode = "default "
-                route_ip = 0
-                route_netmask = 0
-                gateway_1 = "10.27.31.151"
-                gateway_2 = "10.27.31.151"
-                interface = 0
-                metric = 0
-                table_index_1 = 10
-                table_index_2 = 20
-                classifier_index_1 = 10
-                priority_1 = 1
-                classifier_index_2 = 20
-                priority_2 = 2
-
-                route_1 = Function("Route_1")
-                configlist.extend(route_1.get_route(route_type, route_mode, route_ip, route_netmask, gateway_1, interface, metric, table_index_1, classifier_index_1, priority_1))
-                route_2 = Function("Route_2")
-                configlist.extend(route_2.get_route(route_type, route_mode, route_ip, route_netmask, gateway_2, interface, metric, table_index_2, classifier_index_2, priority_2))
-                '''
-
-
-
-
 def set_log(filename, loggername):
     logpath = os.path.join(os.getcwd(), 'log')
     if not os.path.exists(logpath):
@@ -308,20 +230,24 @@ if __name__ == '__main__':
     #connectType = "telnetConsole"
     #if connectType == "telnetConsole":
 
+    #We have 1 server and 2 clients
+    #server --> do routing work
+    #client1 --> public route testing
+    #client2 --> private route testing
+
     telnet_ip = "10.2.66.50"
     DTS_port = 2035
     STS_port = 2040
     LMS_port = 2038
     public_ping_ip = "8.8.8.8"
-    private_ping_ip = "10.2.66.1"
+    private_ping_ip = "10.2.8.1"
 
 
-    # set_up_config
+    # set_up_device_config
     port_list = [DTS_port, STS_port, LMS_port]
     for index, port in enumerate(port_list):
         device = Device_Tool(telnet_ip, port_list[index], "telnet", "admin", "admin", "Routing_test")
         if device:
-            print "connected"
             if port == DTS_port:
                 print "DTS connected"
                 DTS_config(device)
@@ -331,12 +257,12 @@ if __name__ == '__main__':
             elif port == LMS_port:
                 print "LMS connected"
                 LMS_set_vlan_port(device)
-                LMS_set_dialer(device)
-                LMS_set_classifier(device)
-                LMS_set_route_table(device)
+                #LMS_set_dialer(device)
+                #LMS_set_classifier(device)
+                #LMS_set_route_table(device)
 
 
-'''
+
     #routing_test
     telnet_port_list = [DTS_port, LMS_port, STS_port, LMS_port]
     command_list = ["ping %s"%(public_ping_ip), "tcpdump -i usb1 icmp" ,"ping %s"%(private_ping_ip) ,"tcpdump -i eth0 icmp"]
@@ -350,12 +276,20 @@ if __name__ == '__main__':
         else:
             TelnetConsole.send_command(command_list[index], 5, "shell", checkResponse="bash-4.2#", logflag=True)
             time.sleep(1)
-            if "ICMP echo request" in TelnetConsole.telnetresult:
-                print "routing test successful"
+            if "%s: ICMP echo request"%(public_ping_ip) in TelnetConsole.telnetresult:
+                print "public routing test successful"
+            elif "%s: ICMP echo request"%(private_ping_ip) in TelnetConsole.telnetresult:
+                print "private routing test successful"
             else:
                 print "routing test fail"
             TelnetConsole.telnet.write(("\x03").encode('ascii'))
-'''
+
+    #stop ping and tcpdump --> to be revised
+    for index, port in enumerate(telnet_port_list):
+        TelnetConsole = Telnet_Console(telnet_ip, telnet_port_list[index], "admin", "admin", "Routing_test")
+        TelnetConsole.login()
+        TelnetConsole.telnet.write(("\x03").encode('ascii'))
+
 
 
 
