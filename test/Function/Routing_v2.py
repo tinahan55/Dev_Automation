@@ -15,7 +15,6 @@ def device_check_info(logger, device, checkitem, checkcommand, checkmatch):
 
 def get_platform(device, port_index_type1,port_index_type2):
     platform = device.device_get_response("show platform type")
-    print platform
     #Due to LMS's port type is different from DTS/STS, we get platform to decide port type
     if "DTS" in platform or "STS" in platform:
         port_index = port_index_type1
@@ -24,63 +23,75 @@ def get_platform(device, port_index_type1,port_index_type2):
 
     return port_index
 
-
-def DTS_config(device):
+def client1_config(device):
     configlist = list()
-    #vlan
+    #set vlan
     vlan_index = 10
-    vlan_description = "DTS_vlan10"
+    vlan_description = "client1_vlan10"
     ip_mode = "static"
     ipaddress = "192.168.10.1"
     netmask = "255.255.255.0"
-    # port
+    # set port
     port_index_type1 = 1
     port_index_type2 = "2/1"
     port_type = "port"
     vlan_tagged = "untagged"
     port_tagged = "untagged"
+    #set route
+    route_type = "ip"
+    route_mode = "default"
+    gateway = "192.168.10.254"
+
     #get platform to decide port type
     port_index = get_platform(device,port_index_type1,port_index_type2)
 
-    function_dts = Function("DTS_vlan")
-    configlist.extend(function_dts.get_vlan(vlan_index, vlan_description, ip_mode, ipaddress, netmask))
-    interface_dts = Interface("DTS_port")
-    configlist.extend(interface_dts.get_port_interface(port_index, port_type, vlan_index, vlan_tagged, port_tagged))
+    function_client1 = Function("client1_vlan")
+    configlist.extend(function_client1.get_vlan(vlan_index, vlan_description, ip_mode, ipaddress, netmask))
+    configlist.extend(function_client1.get_route(route_type, route_mode, "", "", gateway, "", "", "", "", "", ""))
+    interface_client1 = Interface("client1_port")
+    configlist.extend(interface_client1.get_port_interface(port_index, port_type, vlan_index, vlan_tagged, port_tagged))
+
     device.device_set_configs(configlist)
 
-    checkitem = "DTS_config"
-    checkcommandlist = ["show interface all", "show interface vlan %s detail" % (vlan_index)]
+
+    checkitem = "client1_config"
+    checkcommandlist = ["show interface all", "show interface vlan %s detail"%(vlan_index)]
     checkitemlist = ["vlan %s" % (vlan_index), "IP address : %s" % (ipaddress)]
     logger.info("[%s]Starting" % (checkitem))
     for index, value in enumerate(checkcommandlist):
         checkmatch = checkitemlist[index]
         device_check_info(logger, device, checkitem, value, checkmatch)
 
-def STS_config(device):
+def client2_config(device):
     configlist = list()
-    # vlan
+    # set vlan
     vlan_index = 20
-    vlan_description = "STS_vlan10"
+    vlan_description = "client2_vlan10"
     ip_mode = "static"
     ipaddress = "192.168.20.1"
     netmask = "255.255.255.0"
-    # port
+    #set port
     port_index_type1 = 2
     port_index_type2 = "2/2"
     port_type = "port"
     vlan_tagged = "untagged"
     port_tagged = "untagged"
+    # set route
+    route_type = "ip"
+    route_mode = "default"
+    gateway = "192.168.20.254"
     # get platform to decide port type
     port_index = get_platform(device, port_index_type1, port_index_type2)
 
-    function_sts = Function("STS_vlan")
-    configlist.extend(function_sts.get_vlan(vlan_index, vlan_description, ip_mode, ipaddress, netmask))
-    interface_sts = Interface("STS_port")
-    configlist.extend(interface_sts.get_port_interface(port_index, port_type, vlan_index, vlan_tagged, port_tagged))
+    function_client2 = Function("client2_vlan")
+    configlist.extend(function_client2.get_vlan(vlan_index, vlan_description, ip_mode, ipaddress, netmask))
+    configlist.extend(function_client2.get_route(route_type, route_mode, "", "", gateway, "", "", "", "", "", ""))
+    interface_client2 = Interface("client2_port")
+    configlist.extend(interface_client2.get_port_interface(port_index, port_type, vlan_index, vlan_tagged, port_tagged))
 
     device.device_set_configs(configlist)
 
-    checkitem = "STS_config"
+    checkitem = "client2_config"
     checkcommandlist = ["show interface all", "show interface vlan %s detail" % (vlan_index)]
     checkitemlist = ["vlan %s" % (vlan_index), "IP address : %s" % (ipaddress)]
     logger.info("[%s]Starting" % (checkitem))
@@ -88,11 +99,11 @@ def STS_config(device):
         checkmatch = checkitemlist[index]
         device_check_info(logger, device, checkitem, value, checkmatch)
 
-def LMS_set_vlan_port(device):
+def server_set_vlan_port(device):
     configlist = list()
-    # vlan and port
+    # set vlan and port
     vlan_index_list = [10, 20]
-    vlan_description_list = ["LMS_vlan10", "LMS_vlan20"]
+    vlan_description_list = ["server_vlan10", "server_vlan20"]
     ip_mode = "static"
     ipaddress_list = ["192.168.10.254", "192.168.20.254"]
     netmask = "255.255.255.0"
@@ -101,28 +112,31 @@ def LMS_set_vlan_port(device):
     port_type = "port"
     vlan_tagged = "untagged"
     port_tagged = "untagged"
+    #set maintenance
+    maintenance_ip = "10.2.66.64"
+    maintenance_netmask = "255.255.255.0"
     # get platform to decide port type
     port_index = get_platform(device, port_index_type1, port_index_type2)
 
     for index, vlan_index in enumerate(vlan_index_list):
-        function = Function("LMS_vlan")
+        function = Function("server_vlan")
         configlist.extend(function.get_vlan(vlan_index, vlan_description_list[index], ip_mode, ipaddress_list[index], netmask))
-        interface = Interface("LMS_port")
+        interface = Interface("server_port")
         configlist.extend(interface.get_port_interface(port_index[index], port_type, vlan_index_list[index], vlan_tagged,port_tagged))
+        configlist.extend(interface.get_maintenance_interface(maintenance_ip, maintenance_netmask))
 
         device.device_set_configs(configlist)
 
-        # check_config
-        checkitem = "LMS_set_vlan_port"
-        checkcommandlist = ["show interface all", "show interface vlan %s detail" % (vlan_index_list[index])]
-        checkitemlist = ["vlan %s" % (vlan_index_list[index]), "IP address : %s" % (ipaddress_list[index])]
+        # check config
+        checkitem = "server_set_vlan_port"
+        checkcommandlist = ["show interface all", "show interface vlan %s detail" % (vlan_index_list[index]),"show interface maintenance 0 brief"]
+        checkitemlist = ["vlan %s" % (vlan_index_list[index]), "IP address : %s" % (ipaddress_list[index]),"IP address : %s"%(maintenance_ip)]
         logger.info("[%s]Starting" % (checkitem))
         for index, value in enumerate(checkcommandlist):
             checkmatch = checkitemlist[index]
             device_check_info(logger, device, checkitem, value, checkmatch)
 
-
-def LMS_set_dialer(device):
+def server_set_dialer(device):
     configlist = list()
     # profile and dialer
     profile_name = "LTE"
@@ -132,12 +146,13 @@ def LMS_set_dialer(device):
 
     profile = Profile("Profile")
     configlist.extend(profile.get_cellular_profile(profile_name, access_name))
-    interface_dialer = Interface("LMS_dialer")
+    interface_dialer = Interface("server_dialer")
     configlist.extend(interface_dialer.get_dialer_interface(dialer_index, profile_name, cellular_index))
 
     device.device_set_configs(configlist)
 
-    checkitem = "LMS_set_dialer"
+    time.sleep(5)
+    checkitem = "server_set_dialer"
     checkcommandlist = ["show interface all", "show interface dialer %s detail" % (dialer_index)]
     checkitemlist = ["dialer %s" % (dialer_index), "Operational : up"]
     logger.info("[%s]Starting" % (checkitem))
@@ -145,16 +160,15 @@ def LMS_set_dialer(device):
         checkmatch = checkitemlist[index]
         device_check_info(logger, device, checkitem, value, checkmatch)
 
-
-def LMS_set_classifier(device):
+def server_set_classifier(device):
     configlist = list()
     # classifier
     index_list = [10, 20]
-    description_list = ["DTS-1 to dialer", "STS-1 to maintenance network"]
+    description_list = ["client1 to public network", "client2 to internal network"]
     ip_type = "source"
-    protocol_type = 0
-    port_mode = 0
-    port_no = 0
+    protocol_type = ""
+    port_mode = ""
+    port_no = ""
     ip_address_list = ["192.168.10.0/24", "192.168.20.0/24"]
 
     for index, classifier_index in enumerate(index_list):
@@ -164,7 +178,7 @@ def LMS_set_classifier(device):
         device.device_set_configs(configlist)
 
         # check_config
-        checkitem = "LMS_set_classifier"
+        checkitem = "server_set_classifier"
         checkcommandlist = ["show classifier %s" % (index_list[index])]
         checkitemlist = ["Classifier ID : %s" % (index_list[index])]
         logger.info("[%s]Starting" % (checkitem))
@@ -172,31 +186,33 @@ def LMS_set_classifier(device):
             checkmatch = checkitemlist[index]
             device_check_info(logger, device, checkitem, value, checkmatch)
 
-
-def LMS_set_route_table(device):
+def server_set_route_table(device):
     configlist = list()
     # route table
     route_type = "table"
     route_mode = "default "
-    route_ip = 0
-    route_netmask = 0
-    gateway_list = ["100.92.6.80", "10.2.66.1"]
-    interface = 0
-    metric = 0
+    route_ip = ""
+    route_netmask = ""
+    gateway = ""
+    interface = ""
+    metric = ""
     table_index_list = [10, 20]
     classifier_index_list = [10, 20]
     priority_list = [1, 2]
+    default_interface = ["dialer 0", "maintenance 0"]
 
-    for index, gateway in enumerate(gateway_list):
+    for index, table in enumerate(table_index_list):
         route = Function("Route")
-        configlist.extend(route.get_route(route_type, route_mode, route_ip, route_netmask, gateway_list[index], interface, metric,table_index_list[index], classifier_index_list[index], priority_list[index]))
+        configlist.extend(route.get_route(route_type, route_mode, route_ip, route_netmask, gateway, interface, metric, table_index_list[index], default_interface[index]))
+        configlist.extend(route.get_policy_route(classifier_index_list[index], table_index_list[index], priority_list[index]))
 
         device.device_set_configs(configlist)
 
         # check_config
-        checkitem = "LMS_route_table"
+        checkitem = "server_route_table"
         checkcommandlist = ["show route table all"]
-        checkitemlist = ["%s" % (table_index_list[index])]
+        #checkitemlist = ["%s" % (table_index_list[index])]
+        checkitemlist = ["%s(.*)0.0.0.0(.*)0.0.0.0(.*)0.0.0.0(.*)S" % (table_index_list[index])]
         logger.info("[%s]Starting" % (checkitem))
         for index, value in enumerate(checkcommandlist):
             checkmatch = checkitemlist[index]
@@ -229,48 +245,50 @@ if __name__ == '__main__':
 
     #connectType = "telnetConsole"
     #if connectType == "telnetConsole":
+    #add paging command
 
-    #We have 1 server and 2 clients
+    #We have 1 server and 2 clients in this architecture
     #server --> do routing work
     #client1 --> public route testing
     #client2 --> private route testing
 
     telnet_ip = "10.2.66.50"
-    DTS_port = 2035
-    STS_port = 2040
-    LMS_port = 2038
+    client1_port = 2035
+    client2_port = 2040
+    server_port = 2038
     public_ping_ip = "8.8.8.8"
     private_ping_ip = "10.2.8.1"
 
 
     # set_up_device_config
-    port_list = [DTS_port, STS_port, LMS_port]
+    port_list = [client1_port, client2_port, server_port]
     for index, port in enumerate(port_list):
         device = Device_Tool(telnet_ip, port_list[index], "telnet", "admin", "admin", "Routing_test")
         if device:
-            if port == DTS_port:
-                print "DTS connected"
-                DTS_config(device)
-            elif port == STS_port:
-                print "STS connected"
-                STS_config(device)
-            elif port == LMS_port:
-                print "LMS connected"
-                LMS_set_vlan_port(device)
-                #LMS_set_dialer(device)
-                #LMS_set_classifier(device)
-                #LMS_set_route_table(device)
+            if port == client1_port:
+                print "client1 connected"
+                client1_config(device)
+            elif port == client2_port:
+                print "client2 connected"
+                client2_config(device)
+            if port == server_port:
+                print "server connected"
+                device.device_send_command("update terminal paging disable")
+                server_set_vlan_port(device)
+                server_set_dialer(device)
+                server_set_classifier(device)
+                server_set_route_table(device)
 
 
 
     #routing_test
-    telnet_port_list = [DTS_port, LMS_port, STS_port, LMS_port]
+    telnet_port_list = [client1_port, server_port, client2_port, server_port]
     command_list = ["ping %s"%(public_ping_ip), "tcpdump -i usb1 icmp" ,"ping %s"%(private_ping_ip) ,"tcpdump -i eth0 icmp"]
     print "Routing test starting"
     for index, port in enumerate(telnet_port_list):
         TelnetConsole = Telnet_Console(telnet_ip, telnet_port_list[index],"admin", "admin", "Routing_test")
         TelnetConsole.login()
-        if port == DTS_port or port == STS_port:
+        if port == client1_port or port == client2_port:
             TelnetConsole.send_command("no config interface maintenance 0 enable", 5, "lilee", checkResponse="localdomain",logflag=True)
             TelnetConsole.send_command(command_list[index], 5, "lilee", checkResponse="localdomain", logflag=True)
         else:
