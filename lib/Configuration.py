@@ -61,6 +61,11 @@ class Interface(object):
             commandlist.append("config switch port %s egress %s"%(port_index,port_tagged))
         return commandlist
 
+    def get_maintenance_interface(self,ip,netmask):
+        commandlist = list()
+        commandlist.append("config interface maintenance 0 ip address %s netmask %s"%(ip,netmask))
+        commandlist.append("config interface maintenance 0 enable")
+        return commandlist
 
 
 class Function(object):
@@ -92,7 +97,7 @@ class Function(object):
             else: # for any and icmp
                 commandlist.append("config classifier %s match ip protocol %s"%(index,protocol_type))
         else:
-            commandlist.append("config classifier %s match ip %s \"%s\""%(index,ip_type,ip_address))
+            commandlist.append("config classifier %s match ip %s %s"%(index,ip_type,ip_address))
         return commandlist
 
 
@@ -164,22 +169,31 @@ class Function(object):
             commandlist.append("config user %s role %s"%(user_name,user_role))
         return commandlist
 
-    def get_route(self, route_type, route_mode, route_ip, route_netmask, gateway, interface, metric, table_index, classifier_index, priority):
+    def get_route(self, route_type, route_mode, route_ip, route_netmask, gateway, interface, metric, table_index, default_interface):
         commandlist =list()
         if route_type == "ip":
             if route_mode == "network":
                 commandlist.append("config route ip network %s %s"%(route_ip, route_netmask))
             else:
-                commandlist.append("config route ip default gateway %s interface %s metric %s"%(gateway, interface, metric))
+                if interface != "":
+                    commandlist.append("config route ip default gateway %s interface %s metric %s"%(gateway, interface, metric))
+                else:
+                    commandlist.append("config route ip default gateway %s"%(gateway))
+
         elif route_type == "table":
             if route_mode == "network":
                 commandlist.append("config route table %s ip network %s %s"%(table_index, route_ip, route_netmask))
             else:
-                commandlist.append("config route table %s ip default gateway %s"%(table_index, gateway))
-        commandlist.append("config policy-route classifier %s table %s priority %s"%(classifier_index, table_index, priority))
+                print "enter"
+                commandlist.append("config route table %s ip default interface %s"%(table_index, default_interface))
 
         return commandlist
 
+    def get_policy_route(self,classifier_index, table_index,priority):
+        commandlist = list()
+        commandlist.append("config policy-route classifier %s table %s priority %s" % (classifier_index, table_index, priority))
+
+        return commandlist
 
 
 
