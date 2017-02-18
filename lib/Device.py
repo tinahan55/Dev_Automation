@@ -75,7 +75,7 @@ class Device_Tool(object):
         command_mode =self.__device_check_mode(command)
         if self.connecttype == "telnet":
             if self.target!=None:
-                #commandresult = self.target.send_command(command,timeout,command_mode)
+                commandresult = self.target.send_command(command,timeout,command_mode)
                 self.target_response = self._escape_ansi(self.target.telnetresult)
 
         elif self.connecttype =="ssh":
@@ -133,6 +133,8 @@ class Device_Tool(object):
         for config in configlist:
             if config not in runningconfig:
                 self.device_send_command(config)
+            else:
+                print "no config need to be set"
 
     def device_set_no_config(self,configlist):
         runningconfig = self.device_get_running_config()
