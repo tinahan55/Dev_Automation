@@ -150,6 +150,8 @@ class Device_Tool(object):
         for config in configlist:
             if config not in runningconfig:
                 self.device_send_command(config)
+            else:
+                print "no config need to be set"
 
     def device_set_no_config(self,configlist):
         runningconfig = self.device_get_running_config()
@@ -195,6 +197,24 @@ class Device_Tool(object):
                 self.device_product_name=  sub_match[0]
                 if self.device_product_name!="":
                     self.device_type = self.device_product_name.split("-")[0].lower()
+
+    def device_get_response(self, command):
+        timeout = 5
+        commandresult = False
+        command_mode = self.__device_check_mode(command)
+        if self.connecttype == "telnet":
+            if self.target != None:
+                commandresult = self.target.send_command(command, timeout, command_mode)
+                self.target_response = self._escape_ansi(self.target.telnetresult)
+                return self.target_response
+        elif self.connecttype == "ssh":
+            if self.target != None:
+                commandresult = self.target.write_command(command, timeout, command_mode)
+                self.target_response = self._escape_ansi(self.target.sshresult)
+                return self.target_response
+        #return commandresult
+
+
 
 
 def set_log(filename,loggername):
