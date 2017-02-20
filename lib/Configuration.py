@@ -63,7 +63,10 @@ class Interface(object):
 
     def get_maintenance_interface(self,ip,netmask):
         commandlist = list()
-        commandlist.append("config interface maintenance 0 ip address %s netmask %s"%(ip,netmask))
+        if ip == "dhcp":
+            commandlist.append("config interface maintenance 0 ip address dhcp")
+        else:
+            commandlist.append("config interface maintenance 0 ip address %s netmask %s"%(ip,netmask))
         commandlist.append("config interface maintenance 0 enable")
         return commandlist
 
