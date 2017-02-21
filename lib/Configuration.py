@@ -187,7 +187,6 @@ class Function(object):
             if route_mode == "network":
                 commandlist.append("config route table %s ip network %s %s"%(table_index, route_ip, route_netmask))
             else:
-                print "enter"
                 commandlist.append("config route table %s ip default interface %s"%(table_index, default_interface))
 
         return commandlist
