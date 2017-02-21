@@ -13,7 +13,7 @@ def device_check_info(logger, device, checkitem, checkcommand, checkmatch):
     if checkresult == False:
         logger.info("%s check %s error: %s" % (title, checkmatch, device.target_response))
 
-def get_platform(device, port_index_type1,port_index_type2):
+def get_port_type(device, port_index_type1,port_index_type2):
     platform = device.device_get_response("show platform type")
     #Due to LMS's port type is different from DTS/STS, we get platform to decide port type
     if "DTS" in platform or "STS" in platform:
@@ -22,6 +22,16 @@ def get_platform(device, port_index_type1,port_index_type2):
         port_index = port_index_type2
 
     return port_index
+
+def get_cellular_type(device, cellular_index_type1,cellular_index_type2):
+    platform = device.device_get_response("show platform type")
+    #Due to LMS's port type is different from DTS/STS, we get platform to decide port type
+    if "DTS" in platform or "LMS" in platform:
+        cellular_index = cellular_index_type1
+    else:
+        cellular_index = cellular_index_type2
+
+    return cellular_index
 
 def client1_config(device):
     configlist = list()
@@ -43,11 +53,11 @@ def client1_config(device):
     gateway = "192.168.10.254"
 
     #get platform to decide port type
-    port_index = get_platform(device,port_index_type1,port_index_type2)
+    port_index = get_port_type(device,port_index_type1,port_index_type2)
 
     function_client1 = Function("client1_vlan")
     configlist.extend(function_client1.get_vlan(vlan_index, vlan_description, ip_mode, ipaddress, netmask))
-    configlist.extend(function_client1.get_route(route_type, route_mode, "", "", gateway, "", "", "", "", "", ""))
+    configlist.extend(function_client1.get_route(route_type, route_mode, "", "", gateway, "", "", "", ""))
     interface_client1 = Interface("client1_port")
     configlist.extend(interface_client1.get_port_interface(port_index, port_type, vlan_index, vlan_tagged, port_tagged))
 
@@ -81,11 +91,11 @@ def client2_config(device):
     route_mode = "default"
     gateway = "192.168.20.254"
     # get platform to decide port type
-    port_index = get_platform(device, port_index_type1, port_index_type2)
+    port_index = get_port_type(device, port_index_type1, port_index_type2)
 
     function_client2 = Function("client2_vlan")
     configlist.extend(function_client2.get_vlan(vlan_index, vlan_description, ip_mode, ipaddress, netmask))
-    configlist.extend(function_client2.get_route(route_type, route_mode, "", "", gateway, "", "", "", "", "", ""))
+    configlist.extend(function_client2.get_route(route_type, route_mode, "", "", gateway, "", "", "", ""))
     interface_client2 = Interface("client2_port")
     configlist.extend(interface_client2.get_port_interface(port_index, port_type, vlan_index, vlan_tagged, port_tagged))
 
@@ -99,7 +109,7 @@ def client2_config(device):
         checkmatch = checkitemlist[index]
         device_check_info(logger, device, checkitem, value, checkmatch)
 
-def server_set_vlan_port(device):
+def server_set_vlan_port(device, server_maintenance_ip):
     configlist = list()
     # set vlan and port
     vlan_index_list = [10, 20]
@@ -112,25 +122,23 @@ def server_set_vlan_port(device):
     port_type = "port"
     vlan_tagged = "untagged"
     port_tagged = "untagged"
-    #set maintenance
-    maintenance_ip = "10.2.66.64"
-    maintenance_netmask = "255.255.255.0"
+
     # get platform to decide port type
-    port_index = get_platform(device, port_index_type1, port_index_type2)
+    port_index = get_port_type(device, port_index_type1, port_index_type2)
 
     for index, vlan_index in enumerate(vlan_index_list):
         function = Function("server_vlan")
         configlist.extend(function.get_vlan(vlan_index, vlan_description_list[index], ip_mode, ipaddress_list[index], netmask))
         interface = Interface("server_port")
         configlist.extend(interface.get_port_interface(port_index[index], port_type, vlan_index_list[index], vlan_tagged,port_tagged))
-        configlist.extend(interface.get_maintenance_interface(maintenance_ip, maintenance_netmask))
+        configlist.extend(interface.get_maintenance_interface(server_maintenance_ip, "255.255.255.0"))
 
         device.device_set_configs(configlist)
 
         # check config
         checkitem = "server_set_vlan_port"
         checkcommandlist = ["show interface all", "show interface vlan %s detail" % (vlan_index_list[index]),"show interface maintenance 0 brief"]
-        checkitemlist = ["vlan %s" % (vlan_index_list[index]), "IP address : %s" % (ipaddress_list[index]),"IP address : %s"%(maintenance_ip)]
+        checkitemlist = ["vlan %s" % (vlan_index_list[index]), "IP address : %s" % (ipaddress_list[index]),"IP address : %s"%(server_maintenance_ip)]
         logger.info("[%s]Starting" % (checkitem))
         for index, value in enumerate(checkcommandlist):
             checkmatch = checkitemlist[index]
@@ -142,7 +150,11 @@ def server_set_dialer(device):
     profile_name = "LTE"
     access_name = "internet"
     dialer_index = 0
-    cellular_index = "0/1"
+    cellular_index_1 = "0/1"
+    cellular_index_2 = 0
+
+    #Due to STS's celluar type is different from DTS/LMS, we get platform to decide celluar type
+    cellular_index = get_cellular_type(device, cellular_index_1, cellular_index_2)
 
     profile = Profile("Profile")
     configlist.extend(profile.get_cellular_profile(profile_name, access_name))
@@ -151,7 +163,7 @@ def server_set_dialer(device):
 
     device.device_set_configs(configlist)
 
-    time.sleep(5)
+    time.sleep(10)
     checkitem = "server_set_dialer"
     checkcommandlist = ["show interface all", "show interface dialer %s detail" % (dialer_index)]
     checkitemlist = ["dialer %s" % (dialer_index), "Operational : up"]
@@ -253,9 +265,17 @@ if __name__ == '__main__':
     #client2 --> private route testing
 
     telnet_ip = "10.2.66.50"
-    client1_port = 2035
-    client2_port = 2040
-    server_port = 2038
+
+    #client1_port = 2035
+    #client2_port = 2040
+    #server_port = 2038
+    #server_maintenance_ip = "10.2.66.64"
+
+    client1_port = 2038
+    client2_port = 2035
+    server_port = 2040
+    server_maintenance_ip = "10.2.66.65"
+
     public_ping_ip = "8.8.8.8"
     private_ping_ip = "10.2.8.1"
 
@@ -271,10 +291,10 @@ if __name__ == '__main__':
             elif port == client2_port:
                 print "client2 connected"
                 client2_config(device)
-            if port == server_port:
+            elif port == server_port:
                 print "server connected"
                 device.device_send_command("update terminal paging disable")
-                server_set_vlan_port(device)
+                server_set_vlan_port(device, server_maintenance_ip)
                 server_set_dialer(device)
                 server_set_classifier(device)
                 server_set_route_table(device)
