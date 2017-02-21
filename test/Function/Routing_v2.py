@@ -163,7 +163,7 @@ def server_set_dialer(device):
 
     device.device_set_configs(configlist)
 
-    time.sleep(10)
+    time.sleep(20)
     checkitem = "server_set_dialer"
     checkcommandlist = ["show interface all", "show interface dialer %s detail" % (dialer_index)]
     checkitemlist = ["dialer %s" % (dialer_index), "Operational : up"]
@@ -266,15 +266,10 @@ if __name__ == '__main__':
 
     telnet_ip = "10.2.66.50"
 
-    #client1_port = 2035
-    #client2_port = 2040
-    #server_port = 2038
-    #server_maintenance_ip = "10.2.66.64"
-
-    client1_port = 2038
-    client2_port = 2035
-    server_port = 2040
-    server_maintenance_ip = "10.2.66.65"
+    client1_port = 2035
+    client2_port = 2040
+    server_port = 2038
+    server_maintenance_ip = "10.2.66.64"
 
     public_ping_ip = "8.8.8.8"
     private_ping_ip = "10.2.8.1"
