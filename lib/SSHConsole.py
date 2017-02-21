@@ -102,7 +102,6 @@ class SSHConnect(object):
             self.IsConnect =False
             self.ssh.close()
 
-
     def write_command_match(self,command,timeout,mode,result):
          try:
             if(self.ssh):
@@ -115,7 +114,6 @@ class SSHConnect(object):
          except Exception,ex:
              self.logger.error("[write_multip_command_match]write command fail:%s "%(str(ex)))
              return False
-
 
     def write_multip_command_match(self,commandlist,timeout,mode,resultlist):
          try:
@@ -141,12 +139,13 @@ class SSHConnect(object):
             message =  self.remote_conn.recv(5000)
         return message
 
-
     def __Patern_Match(self,pattern,text):
         if '&&' in pattern:
             patterns = pattern.split("&&")
             for pat in patterns:
-                if pat not in text:
+                p = re.compile(pat)
+                match = p.search(text)
+                if (match == None):
                     return False
             return True
         else:
@@ -189,7 +188,7 @@ if __name__ == '__main__':
         #time.sleep(120)
         #sshconnect.connect()
         #sshconnect.write_command("show version",2,"lilee")
-        result = sshconnect.write_command_match("cat /dev/ttyUSB1",10,"shell","GPGSA&&GPAGA&&GPGSV&&GPRMC")
+        result = sshconnect.write_command_match("cat /dev/ttyUSB1",10,"shell","GSV&&GPGSA&&RMC")
         print result
         print sshconnect.sshresult
 

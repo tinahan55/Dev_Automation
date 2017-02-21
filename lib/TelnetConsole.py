@@ -206,13 +206,16 @@ class Telnet_Console(object):
         if '&&' in pattern:
             patterns = pattern.split("&&")
             for pat in patterns:
-                if pat not in text:
+                p = re.compile(pat)
+                match = p.search(text)
+                if (match == None):
                     return False
             return True
         else:
            p = re.compile(pattern)
            match = p.search(text)
            if (match == None):
+               print "pattern : %s , text: %s"%(pattern,text)
                return False
            else:
                return True
@@ -246,6 +249,7 @@ if __name__ == '__main__':
 
   if telnetconsole.IsConnect:
       cmdlist = ["update boot system-image http://10.2.10.17/weekly/v3.3/lmc5000_u_3.3_build62.img","yes"]
+
       resultlist = ["disk update","download"]
       telnetconsole.send_multip_command_match(cmdlist,10,"lilee",resultlist)
       cursor = telnetconsole.telneread_until('\r\n',5)

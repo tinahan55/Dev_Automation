@@ -4,12 +4,9 @@ import httplib2
 import json
 import logging
 from Device import *
+from Tool import Log
 import time
 from time import gmtime, strftime
-
-
-
-
 
 class ImageInfo(object):
 
@@ -84,8 +81,6 @@ class ImageInfo(object):
         return sorted(itemlist, key = alphanum_key,reverse=IfReverse)
 
 
-
-
 class ImageTool(object):
     def __init__(self,device_ip,device_port,connect_type,username="admin",password="admin",logname="Image_Tool"):
         self.image_host_ip = ""
@@ -99,7 +94,7 @@ class ImageTool(object):
         self.device.device_get_version()
 
 
-    def set_image_host(self,host_ip = "10.2.10.17",image_version="3.3",image_mode ="New",build_no=""):
+    def set_image_host(self,host_ip,image_version,image_mode,build_no):
         self.image_host_ip = host_ip
         self.image_version = image_version
 
@@ -115,7 +110,7 @@ class ImageTool(object):
         self.update_image_url_path =imageinfo.image_url_path
 
 
-    def _set_default_config(self,interface,ip_mode,ipaddress="192.168.11.1",netmask="255.255.252.0"):
+    def _set_default_config(self,interface,ip_mode,ipaddress,netmask):
         defaultcommandlist = list()
         defaultcommandlist.append("config security level permissive")
         if ip_mode == "static":
@@ -200,7 +195,7 @@ class ImageTool(object):
         else:
             return False
 
-    def upgrade_device_image(self,maintain_interface,maintenance_ip_mode,maintenanceip="192.168.11.1",netmask="255.255.252.0"):
+    def upgrade_device_image(self,maintain_interface,maintenance_ip_mode,maintenanceip,netmask):
 
         pingcommand ="ping -c5 %s"%(self.image_host_ip)
         pingresult = "64 bytes from %s: icmp_seq=5"%(self.image_host_ip)
@@ -209,19 +204,21 @@ class ImageTool(object):
             IF_Udate = self._check_device_image(self.update_build_image)
             self.logger.info('[upgrade_device_image] check if need to update:%s'%(IF_Udate))
             if IF_Udate ==True:
-                    pingresult = self.device.device_send_command_match(pingcommand,5,pingresult)
+                    pingresult = self.device.device_send_command_match(pingcommand,10,pingresult)
                     if pingresult != True:
                         self.logger.info('[upgrade_device_image][ping fail]set default config')
-                        self._set_default_config("maintenance 0",maintenance_ip_mode)
-                        pingresult = self.device.device_send_command_match(pingcommand,5,pingresult)
+                        self._set_default_config(maintain_interface,maintenance_ip_mode,maintenanceip,netmask)
+                        time.sleep(10)
+                        pingresult = self.device.device_send_command_match(pingcommand,10,pingresult)
                         if pingresult!=True:
                             self.logger.info('[upgrade_device_image][ping fail]start reboot')
                             rebootresult = self.device.device_reboot()
                             self.logger.info('[Upgrade_Device_Build_Image]reboot result:%s'%(rebootresult))
                             if rebootresult == True:
                                 self.logger.info('[upgrade_device_image][after rebooting]set default config')
-                                self._set_default_config(maintain_interface,maintenance_ip_mode)
-                                pingresult = device.device_send_command_match(pingcommand,2,pingresult)
+                                self._set_default_config(maintain_interface,maintenance_ip_mode,maintenanceip,netmask)
+                                time.sleep(10)
+                                pingresult = self.device_send_command_match(pingcommand,2,pingresult)
                                 if pingresult ==True:
                                     self.logger.info("[upgrade_device_image]The image is the oldest one ,need to upgrade")
                                     upgraderesult = self._upgrade(self.update_image_url_path,self.update_build_image)
@@ -238,24 +235,21 @@ class ImageTool(object):
             self.logger.error( "Please choose new or target !!")
 
 
-
-
 if __name__ == '__main__':
-    logfilename = "Image_Tool%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
-    logger = set_log(logfilename,"Image_Tool")
+    mainlogger = Log("Image_Tool","Image_Tool")
     image_server = "10.2.10.17"
     imaage_version = '3.3'
     image_mode = 'Target'
-    image_build_no ="52"
+    image_build_no ="62"
     deviceip = '10.2.11.58'
-    deviceport = 2035
+    deviceport = 2041
     device_connect_type = "telnet"
     username ="admin"
     password ="admin"
 
     item = list()
-    maintain_interface ="eth 0"
-    maintain_ip= '10.2.11.51 '
+    maintain_interface ="maintenance 0"
+    maintain_ip= '10.2.11.250'
     maintain_netmask ='255.255.252.0'
     maintaince_ip_mode ="static"
     imagetool =ImageTool(deviceip,deviceport,device_connect_type,username,password)

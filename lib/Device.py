@@ -3,9 +3,7 @@ import os
 from Image import  *
 from TelnetConsole import *
 from SSHConsole import *
-
-
-
+from Tool import Log
 
 class Device_Tool(object):
 
@@ -216,25 +214,9 @@ class Device_Tool(object):
 
 
 
-
-def set_log(filename,loggername):
-    logger = logging.getLogger(loggername)
-    logger.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh = logging.FileHandler(filename)
-    fh.setLevel(logging.INFO)
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-    console = logging.StreamHandler()
-    console.setLevel(logging.DEBUG)
-    console.setFormatter(formatter)
-    logger.addHandler(console)
-    return logger
-
 if __name__ == '__main__':
 
-
-    logger = set_log("Device.log","device_test")
+    mainlogger = Log("Device","device_test")
 
     #telnet_device =Device_Tool("10.2.11.58",2041,"telnet","admin","admin","device_test")
 
