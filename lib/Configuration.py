@@ -176,7 +176,12 @@ class Function(object):
         commandlist =list()
         if route_type == "ip":
             if route_mode == "network":
-                commandlist.append("config route ip network %s %s"%(route_ip, route_netmask))
+                if gateway != "":
+                    commandlist.append("config route ip network %s netmask %s gateway %s"%(route_ip, route_netmask, gateway))
+                elif interface != "":
+                    commandlist.append("config route ip network %s netmask %s interface %s" % (route_ip, route_netmask, interface))
+                else:
+                    commandlist.append("config route ip network %s %s"%(route_ip, route_netmask))
             else:
                 if interface != "":
                     commandlist.append("config route ip default gateway %s interface %s metric %s"%(gateway, interface, metric))
