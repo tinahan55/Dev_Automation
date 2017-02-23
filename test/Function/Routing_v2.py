@@ -109,7 +109,23 @@ def client2_config(device):
         checkmatch = checkitemlist[index]
         device_check_info(logger, device, checkitem, value, checkmatch)
 
-def server_set_vlan_port(device, server_maintenance_ip):
+def server_set_maintenance(device, server_maintenance_ip):
+    configlist = list()
+    #set maintence ip
+    interface = Interface("maintenance_ip")
+    configlist.extend(interface.get_maintenance_interface(server_maintenance_ip, "255.255.255.0"))
+    device.device_set_configs(configlist)
+
+    #check config
+    checkitem = "server_set_maintenance"
+    checkcommandlist = ["show interface maintenance 0 brief"]
+    checkitemlist = ["IP address : %s"%(server_maintenance_ip)]
+    logger.info("[%s]Starting"%(checkitem))
+    for index, value in enumerate(checkcommandlist):
+        checkmatch = checkitemlist[index]
+        device_check_info(logger, device, checkitem, value, checkmatch)
+
+def server_set_vlan_port(device):
     configlist = list()
     # set vlan and port
     vlan_index_list = [10, 20]
@@ -131,14 +147,13 @@ def server_set_vlan_port(device, server_maintenance_ip):
         configlist.extend(function.get_vlan(vlan_index, vlan_description_list[index], ip_mode, ipaddress_list[index], netmask))
         interface = Interface("server_port")
         configlist.extend(interface.get_port_interface(port_index[index], port_type, vlan_index_list[index], vlan_tagged,port_tagged))
-        configlist.extend(interface.get_maintenance_interface(server_maintenance_ip, "255.255.255.0"))
 
         device.device_set_configs(configlist)
 
         # check config
         checkitem = "server_set_vlan_port"
-        checkcommandlist = ["show interface all", "show interface vlan %s detail" % (vlan_index_list[index]),"show interface maintenance 0 brief"]
-        checkitemlist = ["vlan %s" % (vlan_index_list[index]), "IP address : %s" % (ipaddress_list[index]),"IP address : %s"%(server_maintenance_ip)]
+        checkcommandlist = ["show interface all", "show interface vlan %s detail" % (vlan_index_list[index])]
+        checkitemlist = ["vlan %s" % (vlan_index_list[index]), "IP address : %s" % (ipaddress_list[index])]
         logger.info("[%s]Starting" % (checkitem))
         for index, value in enumerate(checkcommandlist):
             checkmatch = checkitemlist[index]
@@ -201,12 +216,14 @@ def server_set_classifier(device):
 def server_set_route_table(device):
     configlist = list()
     # route table
-    route_type = "table"
-    route_mode = "default "
-    route_ip = ""
-    route_netmask = ""
+    route_type_1 = "table"
+    route_mode_1 = "default "
+    route_type_2 = "ip"
+    route_mode_2 = "network"
+    route_ip = "10.1.0.0"
+    route_netmask = "255.255.0.0"
     gateway = ""
-    interface = ""
+    interface = "maintenance 0"
     metric = ""
     table_index_list = [10, 20]
     classifier_index_list = [10, 20]
@@ -215,8 +232,10 @@ def server_set_route_table(device):
 
     for index, table in enumerate(table_index_list):
         route = Function("Route")
-        configlist.extend(route.get_route(route_type, route_mode, route_ip, route_netmask, gateway, interface, metric, table_index_list[index], default_interface[index]))
+        configlist.extend(route.get_route(route_type_1, route_mode_1, "", "", "", "", metric, table_index_list[index], default_interface[index]))
+        configlist.extend(route.get_route(route_type_2, route_mode_2, route_ip, route_netmask, gateway, interface, metric, "", ""))
         configlist.extend(route.get_policy_route(classifier_index_list[index], table_index_list[index], priority_list[index]))
+
 
         device.device_set_configs(configlist)
 
@@ -255,75 +274,143 @@ if __name__ == '__main__':
     logfilename = "Routing%s.log"%((strftime("%Y%m%d%H%M", gmtime())))
     logger = set_log(logfilename, "Routing_test")
 
-    #connectType = "telnetConsole"
-    #if connectType == "telnetConsole":
-    #add paging command
-
     #We have 1 server and 2 clients in this architecture
     #server --> do routing work
     #client1 --> public route testing
     #client2 --> private route testing
+    #profile setup start---------------------------------------------------------
+    #choose connecttype, "telnet" or "ssh"
+    connecttype = "telnet"
+    #connecttype = "ssh"
 
+    #connecttype = telent
     telnet_ip = "10.2.66.50"
-
     client1_port = 2035
     client2_port = 2040
     server_port = 2038
     server_maintenance_ip = "10.2.66.64"
 
+    #connecttype = ssh
+    client1_ssh_ip = "10.2.66.61"
+    client2_ssh_ip = "10.2.66.65"
+    server_ssh_ip = "10.2.66.64"
+    ssh_port = 22
+
+    #setup public(default google) ping and private(default SJ-router) ping ip for route test
     public_ping_ip = "8.8.8.8"
-    private_ping_ip = "10.2.8.1"
+    private_ping_ip = "10.1.2.1"
+    # profile setup end---------------------------------------------------------
 
 
-    # set_up_device_config
-    port_list = [client1_port, client2_port, server_port]
-    for index, port in enumerate(port_list):
-        device = Device_Tool(telnet_ip, port_list[index], "telnet", "admin", "admin", "Routing_test")
+
+
+    #put item to list
+    if connecttype == "telnet":
+        client1 = client1_port
+        client2 = client2_port
+        server = server_port
+    elif connecttype == "ssh":
+        client1 = client1_ssh_ip
+        client2 = client2_ssh_ip
+        server = server_ssh_ip
+
+    #set_up_device_config
+    item_list = [client1, client2, server]
+    for index, item in enumerate(item_list):
+        if connecttype == "telnet":
+            device = Device_Tool(telnet_ip, item_list[index], "telnet", "admin", "admin", "Routing_test")
+        elif connecttype == "ssh":
+            device = Device_Tool(item_list[index], ssh_port, "ssh", "admin", "admin", "Routing_test")
+
         if device:
-            if port == client1_port:
+            if item == client1:
                 print "client1 connected"
                 client1_config(device)
-            elif port == client2_port:
+            elif item == client2:
                 print "client2 connected"
                 client2_config(device)
-            elif port == server_port:
+            elif item == server:
                 print "server connected"
                 device.device_send_command("update terminal paging disable")
-                server_set_vlan_port(device, server_maintenance_ip)
+                if connecttype == "telnet":
+                    server_set_maintenance(device,server_maintenance_ip)
+                server_set_vlan_port(device)
                 server_set_dialer(device)
                 server_set_classifier(device)
                 server_set_route_table(device)
 
-
-
     #routing_test
-    telnet_port_list = [client1_port, server_port, client2_port, server_port]
-    command_list = ["ping %s"%(public_ping_ip), "tcpdump -i usb1 icmp" ,"ping %s"%(private_ping_ip) ,"tcpdump -i eth0 icmp"]
-    print "Routing test starting"
-    for index, port in enumerate(telnet_port_list):
-        TelnetConsole = Telnet_Console(telnet_ip, telnet_port_list[index],"admin", "admin", "Routing_test")
-        TelnetConsole.login()
-        if port == client1_port or port == client2_port:
-            TelnetConsole.send_command("no config interface maintenance 0 enable", 5, "lilee", checkResponse="localdomain",logflag=True)
-            TelnetConsole.send_command(command_list[index], 5, "lilee", checkResponse="localdomain", logflag=True)
-        else:
-            TelnetConsole.send_command(command_list[index], 5, "shell", checkResponse="bash-4.2#", logflag=True)
-            time.sleep(1)
-            if "%s: ICMP echo request"%(public_ping_ip) in TelnetConsole.telnetresult:
-                print "public routing test successful"
-            elif "%s: ICMP echo request"%(private_ping_ip) in TelnetConsole.telnetresult:
-                print "private routing test successful"
+    if connecttype == "telnet":
+        telnet_port_list = [client1_port, server_port, client2_port, server_port]
+        command_list = ["ping %s"%(public_ping_ip), "tcpdump -i usb1 icmp" ,"ping %s"%(private_ping_ip) ,"tcpdump -i eth0 icmp"]
+        print "Routing test starting"
+        for index, port in enumerate(telnet_port_list):
+            TelnetConsole = Telnet_Console(telnet_ip, telnet_port_list[index],"admin", "admin", "Routing_test")
+            TelnetConsole.login()
+            if port == client1_port or port == client2_port:
+                TelnetConsole.send_command("no config interface maintenance 0 enable", 5, "lilee", checkResponse="localdomain",logflag=True)
+                TelnetConsole.send_command(command_list[index], 5, "lilee", checkResponse="localdomain", logflag=True)
             else:
-                print "routing test fail"
+                TelnetConsole.send_command(command_list[index], 5, "shell", checkResponse="bash-4.2#", logflag=True)
+                time.sleep(1)
+                #ping result check
+                if "%s: ICMP echo request"%(public_ping_ip) in TelnetConsole.telnetresult:
+                    print "public routing test successful!!"
+                elif "%s: ICMP echo request"%(private_ping_ip) in TelnetConsole.telnetresult:
+                    print "private routing test successful!!"
+                else:
+                    print "routing test fail"
+                TelnetConsole.telnet.write(("\x03").encode('ascii'))
+
+        #stop ping and tcpdump --> to be revised
+        for index, port in enumerate(telnet_port_list):
+            TelnetConsole = Telnet_Console(telnet_ip, telnet_port_list[index], "admin", "admin", "Routing_test")
+            TelnetConsole.login()
             TelnetConsole.telnet.write(("\x03").encode('ascii'))
 
-    #stop ping and tcpdump --> to be revised
-    for index, port in enumerate(telnet_port_list):
-        TelnetConsole = Telnet_Console(telnet_ip, telnet_port_list[index], "admin", "admin", "Routing_test")
-        TelnetConsole.login()
-        TelnetConsole.telnet.write(("\x03").encode('ascii'))
+    elif connecttype == "ssh":
+        client_ssh_ip = [client1_ssh_ip, client2_ssh_ip]
+        client_command_list = ["ping %s" % (public_ping_ip), "ping %s"%(private_ping_ip)]
+        server_command_list = ["tcpdump -i usb1 icmp", "tcpdump -i eth0 icmp"]
+        print "Routing test starting"
+        for index, ip in enumerate(client_ssh_ip):
+            SSH_client = SSHConnect(client_ssh_ip[index], port=22, username="admin", password="admin", logname="Routing_test",timeout=10)
+            SSH_client.connect()
+            if ip == client1_ssh_ip:
+                print "client1_ssh"
+                SSH_client.write_command(client_command_list[index], 5, "lilee", logflag=True)
+                #connect to server and do tcpdump
+                SSH_server = SSHConnect(server_ssh_ip, port=22, username="admin", password="admin", logname="Routing_test", timeout=10)
+                SSH_server.connect()
+                print "server_ssh"
+                SSH_server.write_command(server_command_list[index], 5, "shell", logflag=True)
+                time.sleep(3)
+                if "%s: ICMP echo request"%(public_ping_ip) in SSH_server.sshresult:
+                    print "public routing test successful!!"
+                else:
+                    print "public routing test fail"
+            elif ip == client2_ssh_ip:
+                print "client2_ssh"
+                SSH_client.write_command(client_command_list[index], 5, "lilee", logflag=True)
+                #connect to server and do tcpdump
+                SSH_server = SSHConnect(server_ssh_ip, port=22, username="admin", password="admin", logname="Routing_test", timeout=10)
+                SSH_server.connect()
+                print "server_ssh"
+                SSH_server.write_command(server_command_list[index], 5, "shell", logflag=True)
+                time.sleep(3)
+                if "%s: ICMP echo request"%(private_ping_ip) in SSH_server.sshresult:
+                    print "private routing test successful!!"
+                else:
+                    print "private routing test fail"
+                SSH_server.write_command(("\x03").encode('ascii'), 5, "lilee", logflag=True)
+            else:
+                print "ssh connect fail"
 
 
-
+        #stop ping and tcpdump
+        for index, ip in enumerate(client_ssh_ip):
+            SSH = SSHConnect(client_ssh_ip[index], port=22, username="admin", password="admin", logname="Routing_test", timeout=10)
+            SSH.connect()
+            SSH.write_command(("\x03").encode('ascii'),5,"lilee",logflag =True)
 
 
