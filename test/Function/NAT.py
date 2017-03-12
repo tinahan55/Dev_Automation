@@ -88,13 +88,16 @@ def NAT_dhcp(device):
     pool_end_ip = "10.1.4.153"
     netmask = "255.255.255.0"
     default_gateway = "10.1.4.254"
-    dns_server = "168.95.1.1"
-    dns_priority = 1
-    dhcp_interface = "vlan"
-    dhcp_interface_index = 100
+    dns_server_list = ["168.95.1.1"]
+    dns_priority_list =[1]
+    dhcp_interface = "vlan 100"
 
     function = Function("dhcp")
-    configlist.extend(function.get_dhcp_pool(pool_name, pool_start_ip, pool_end_ip, netmask, default_gateway, dns_server, dns_priority, dhcp_interface, dhcp_interface_index))
+    configlist.extend(function.get_dhcp_pool(pool_name, pool_start_ip, pool_end_ip, netmask, default_gateway))
+    configlist.extend(function.set_dhcp_pool_dns(pool_name, dns_server_list, dns_priority_list))
+    configlist.extend(function.set_dhcp_pool_interface(pool_name,dhcp_interface))
+    configlist.extend(function.get_service("dhcp-server"))
+
 
     device.device_set_configs(configlist)
 

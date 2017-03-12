@@ -36,7 +36,7 @@ if __name__ == '__main__':
     logfilename = "TunnelCheck%s.log"%(strftime("%Y%m%d%H%M", gmtime()))
     logger = set_log(logfilename,"check_list")
     ip ="10.2.52.54"
-    port = 0
+    port = 22
     mode ="ssh"
     username = "admin"
     password ="admin"

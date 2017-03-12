@@ -33,16 +33,20 @@ class Telnet_Console(object):
             else:
                 self.telnet.write(("\n").encode('ascii'))
                 readstring = self.telnet.read_until(checkResponse, timeout=3)
+
                 if "localdomain" not in readstring or "bash" not in readstring:
                     self.telnet.write(("\x03" + "\n").encode('ascii'))
-                    readstring = self.telnet.read_until("login:", timeout=30)
+                    readstring = self.telnet.read_until("login:", timeout=3)
+
                     if "login" in readstring:
-                       self.telnet.write((self.username + "\r").encode('ascii'))
+                       self.telnet.write((self.username + "\n").encode('ascii'))
                        readstring =self.telnet.read_until('Password:', timeout=3)
+
                        if len(readstring)!=0:
-                           self.telnet.write((self.password + "\r").encode('ascii'))
+                           self.telnet.write((self.password + "\n").encode('ascii'))
                            readstring = self.telnet.read_until(checkResponse, timeout=3)
-                           if len(readstring) !=0:
+
+                           if "localdomain" in readstring  or "bash" in readstring:
                                self.IsConnect= True
                            else:
                                self.IsConnect= False
@@ -55,6 +59,7 @@ class Telnet_Console(object):
                         self.IsConnect= False
                 else:
                     self.IsConnect= True
+            self.telnetresult = readstring
         except Exception,ex :
             self.logger.error("telnet connect fail:%s"%(str(ex)))
             self.IsConnect= False
@@ -122,7 +127,7 @@ class Telnet_Console(object):
     def __set_command_mode(self,mode):
         mode_result = False
         if mode == "shell":
-                self.telnet.write("\n")
+                self.telnet.write(("\n").encode('ascii'))
                 readstring =self.telnet.read_until('bash', timeout=3)
                 if 'bash' not in readstring:
                     self.telnet.write(("diag shell\n").encode('ascii'))
@@ -136,7 +141,7 @@ class Telnet_Console(object):
                     mode_result = True
 
         elif mode == "lilee":
-                self.telnet.write("\n")
+                self.telnet.write(("\n").encode('ascii'))
                 readstring =self.telnet.read_until('localdomain', timeout=3)
                 if 'localdomain' not in readstring:
                     self.telnet.write("%s\n"%("exit"))
@@ -147,7 +152,6 @@ class Telnet_Console(object):
                 else:
                     mode_result = True
         return mode_result
-
 
     def send_command(self,command,timeout,mode,checkResponse="localdomain",logflag = True):
         try:
@@ -169,12 +173,8 @@ class Telnet_Console(object):
             if self.__set_command_mode(mode):
                 self.telnet.write((command + "\n").encode('ascii'))
                 self.telnetresult = self.telnet.read_until(checkResponse, timeout=int(timeout))
-                p = re.compile(result)
-                match = p.search(self.telnetresult)
-                if (match == None):
-                    return False
-                else:
-                    return True
+                match_result =self.__Patern_Match(result, self.telnetresult)
+                return match_result
          except :
                 return False
 
@@ -183,16 +183,42 @@ class Telnet_Console(object):
             if self.__set_command_mode(mode):
                 for index,command in enumerate(commandlist):
                     result = resultlist[index]
-                    self.telnet.write((command + "\n").encode('ascii'))
-                    self.telnetresult = self.telnet.read_until(checkResponse, timeout=int(timeout))
-                    p = re.compile(result)
-                    match = p.search(self.telnetresult)
-                    if (match == None):
+                    self.telnet.write((command+"\n").encode('ascii'))
+                    self.telnetresult = self.telnet.read_until(result, timeout=int(timeout))
+                    match_result =self.__Patern_Match(result, self.telnetresult)
+                    if (match_result == False):
+                        self.logger.error("[write_multip_command_match]command(%s):%s "%(command,match_result))
                         return False
                 return True
-         except :
+         except Exception ,e :
+                print str(e)
                 return False
 
+    def console_message(self):
+        message =""
+        if(self.telnet):
+            cursor = self.telnet.read_until('\r\n',10)
+            if len(cursor) > 0:
+                return cursor
+        return message
+
+    def __Patern_Match(self,pattern,text):
+        if '&&' in pattern:
+            patterns = pattern.split("&&")
+            for pat in patterns:
+                p = re.compile(pat)
+                match = p.search(text)
+                if (match == None):
+                    return False
+            return True
+        else:
+           p = re.compile(pattern)
+           match = p.search(text)
+           if (match == None):
+               print "pattern : %s , text: %s"%(pattern,text)
+               return False
+           else:
+               return True
 
 
 def set_log(filename,loggername):
@@ -217,15 +243,29 @@ if __name__ == '__main__':
   logger.info("telnet")
 
 
-  telnetconsole =Telnet_Console('10.2.11.58',2041,"admin","admin","telnet_test")
+  telnetconsole =Telnet_Console('10.2.11.58',2035,"admin","admin","telnet_test")
 
   telnetconsole.login()
 
   if telnetconsole.IsConnect:
-      print telnetconsole.send_command_match("show version",2,"lilee","Lilee(.*) Ltd.","localdomain")
-      print telnetconsole.send_command("cat /proc/partitions",2,"shell","sda","bash")
-      print telnetconsole.send_command_match("show version",2,"lilee","Lilee(.*) Ltd.","localdomain")
-      print telnetconsole.send_command("cat /proc/partitions",2,"shell","sda","bash")
+      cmdlist = ["update boot system-image http://10.2.10.17/weekly/v3.3/lmc5000_u_3.3_build62.img","yes"]
+
+      resultlist = ["disk update","download"]
+      telnetconsole.send_multip_command_match(cmdlist,10,"lilee",resultlist)
+      cursor = telnetconsole.telneread_until('\r\n',5)
+        # Make sure we have something to work with.
+      while len(cursor) > 0:
+            print cursor
+            cursor = telnetconsole.telnet.read_until('\r\n', 10)
+      print cursor
+
+
+      #time.sleep(5)
+      #print telnetconsole.telnet.read_very_eager()
+      #print telnetconsole.send_multip_command_match("show version",2,"lilee","Lilee(.*) Ltd.","localdomain")
+      #print telnetconsole.send_command("cat /proc/partitions",2,"shell","sda","bash")
+      #print telnetconsole.send_command_match("show version",2,"lilee","Lilee(.*) Ltd.","localdomain")
+      #print telnetconsole.send_command("cat /proc/partitions",2,"shell","sda","bash")
 
 
 

@@ -61,6 +61,15 @@ class Interface(object):
             commandlist.append("config switch port %s egress %s"%(port_index,port_tagged))
         return commandlist
 
+    def get_maintenance_interface(self,ip,netmask):
+        commandlist = list()
+        if ip == "dhcp":
+            commandlist.append("config interface maintenance 0 ip address dhcp")
+        else:
+            commandlist.append("config interface maintenance 0 ip address %s netmask %s"%(ip,netmask))
+        commandlist.append("config interface maintenance 0 enable")
+        return commandlist
+
 
 class Function(object):
     def __init__(self,type):
@@ -91,44 +100,54 @@ class Function(object):
             else: # for any and icmp
                 commandlist.append("config classifier %s match ip protocol %s"%(index,protocol_type))
         else:
-            commandlist.append("config classifier %s match ip %s \"%s\""%(index,ip_type,ip_address))
+            commandlist.append("config classifier %s match ip %s %s"%(index,ip_type,ip_address))
         return commandlist
 
 
-    def get_dhcp_pool(self, pool_name, pool_start_ip, pool_end_ip, netmask, default_gateway, dns_server, dns_priority, dhcp_interface, dhcp_interface_index):
+    def get_dhcp_pool(self, pool_name, pool_start_ip, pool_end_ip, netmask, default_gateway):
         commandlist = list()
         commandlist.append("config add dhcp-pool \"%s\""%(pool_name))
         commandlist.append("config dhcp-pool \"%s\" add ip-address-range from %s to %s"%(pool_name, pool_start_ip, pool_end_ip))
         commandlist.append("config dhcp-pool \"%s\" netmask %s"%(pool_name, netmask))
         commandlist.append("config dhcp-pool \"%s\" ip default-gateway %s"%(pool_name, default_gateway))
-        commandlist.append("config dhcp-pool \"%s\" ip dns-server %s priority %s"%(pool_name, dns_server, dns_priority))
-        commandlist.append("config dhcp-server pool \"%s\" add interface %s %s"%(pool_name, dhcp_interface, dhcp_interface_index))
-        #dhcp-server enable
-        commandlist.append("config service dhcp-server enable")
+        return commandlist
+
+    def set_dhcp_pool_dns(self,pool_name,dns_server_list,dns_priority_list):
+        commandlist = list()
+        for index,dns_server in enumerate(dns_server_list):
+            dns_priority = dns_priority_list[index]
+            commandlist.append("config dhcp-pool \"%s\" ip dns-server %s priority %s"%(pool_name, dns_server, dns_priority))
+        return commandlist
+
+    def set_dhcp_pool_interface(self,pool_name, dhcp_interface):
+        commandlist = list()
+        commandlist.append("config dhcp-server pool \"%s\" add interface %s"%(pool_name, dhcp_interface))
         return commandlist
 
 
-    def get_nat(self, nat_type, port, interface, interface_index, classifier_index, ip, priority):
+
+
+    def get_nat(self, nat_type, port, interface, classifier_index, ip, priority):
         commandlist = list()
         if nat_type == "snat":
             if classifier_index != "":
                 if port != "":
-                    commandlist.append("config snat out-interface %s %s classifier %s translate-to ip %s port % priority %s"%(interface, interface_index, classifier_index, ip, port, priority))
+                    commandlist.append("config snat out-interface %s classifier %s translate-to ip %s port % priority %s"%(interface, classifier_index, ip, port, priority))
                 else:
-                    commandlist.append("config snat out-interface %s %s classifier %s translate-to ip %s priority %s"%(interface, interface_index, classifier_index, ip, priority))
+                    commandlist.append("config snat out-interface %s classifier %s translate-to ip %s priority %s"%(interface, classifier_index, ip, priority))
             else:
-                commandlist.append("config snat out-interface %s %s priority %s"%(interface, interface_index, priority))
+                commandlist.append("config snat out-interface %s priority %s"%(interface, priority))
         elif nat_type == "dnat":
             if classifier_index != "":
                 if port != "":
-                    commandlist.append("config dnat in-interface %s %s classifier %s translate-to ip %s port %s priority %s"%(interface, interface_index, classifier_index, ip, port, priority))
+                    commandlist.append("config dnat in-interface %s classifier %s translate-to ip %s port %s priority %s"%(interface, classifier_index, ip, port, priority))
                 else:
-                    commandlist.append("config dnat in-interface %s %s classifier %s translate-to ip %s priority %s"%(interface, interface_index, classifier_index, ip, priority))
+                    commandlist.append("config dnat in-interface %s classifier %s translate-to ip %s priority %s"%(interface, classifier_index, ip, priority))
             else:
                 if port != "":
-                    commandlist.append("config dnat in-interface %s %s translate-to ip %s port % priority %s"%(interface, interface_index, ip, port, priority))
+                    commandlist.append("config dnat in-interface %s translate-to ip %s port % priority %s"%(interface, ip, port, priority))
                 else:
-                    commandlist.append("config dnat in-interface %s %s translate-to ip %s priority %s"%(interface, interface_index, ip, priority))
+                    commandlist.append("config dnat in-interface %s translate-to ip %s priority %s"%(interface, ip, priority))
 
         return commandlist
 
@@ -153,20 +172,35 @@ class Function(object):
             commandlist.append("config user %s role %s"%(user_name,user_role))
         return commandlist
 
-    def get_route(self, route_type, route_mode, route_ip, route_netmask, gateway, interface, metric, table_index, classifier_index, priority):
+    def get_route(self, route_type, route_mode, route_ip, route_netmask, gateway, interface, metric, table_index, default_interface):
         commandlist =list()
         if route_type == "ip":
             if route_mode == "network":
-                commandlist.append("config route ip network %s %s")%(route_ip, route_netmask)
+                if gateway != "":
+                    commandlist.append("config route ip network %s netmask %s gateway %s"%(route_ip, route_netmask, gateway))
+                elif interface != "":
+                    commandlist.append("config route ip network %s netmask %s interface %s" % (route_ip, route_netmask, interface))
+                else:
+                    commandlist.append("config route ip network %s %s"%(route_ip, route_netmask))
             else:
-                commandlist.append("config route ip default gateway %s interface %s metric %s")%(gateway, interface, metric)
-        elif route_type == "table":
-            if route_mode == "nework":
-                commandlist.append("config route table %s ip network %s %s")%(table_index, route_ip, route_netmask)
-            else:
-                commandlist.append("config route table %s ip default gateway %s")%(table_index, gateway)
-        commandlist.append("config policy-route classifier %s table %s priority %s")%(classifier_index, table_index, priority)
+                if interface != "":
+                    commandlist.append("config route ip default gateway %s interface %s metric %s"%(gateway, interface, metric))
+                else:
+                    commandlist.append("config route ip default gateway %s"%(gateway))
 
+        elif route_type == "table":
+            if route_mode == "network":
+                commandlist.append("config route table %s ip network %s %s"%(table_index, route_ip, route_netmask))
+            else:
+                commandlist.append("config route table %s ip default interface %s"%(table_index, default_interface))
+
+        return commandlist
+
+    def get_policy_route(self,classifier_index, table_index,priority):
+        commandlist = list()
+        commandlist.append("config policy-route classifier %s table %s priority %s" % (classifier_index, table_index, priority))
+
+        return commandlist
 
 
 

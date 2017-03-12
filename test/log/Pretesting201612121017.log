@@ -1,0 +1,26 @@
+2016-12-12 18:17:29,558 - Pre_Testing.Device_Tool - INFO - creating the sub log for Device_Tool
+2016-12-12 18:17:29,558 - Pre_Testing.ssh - INFO - creating the sub log for SSHConnect
+2016-12-12 18:17:30,739 - Pre_Testing.ssh - INFO - connect status :True
+2016-12-12 18:17:58,813 - Pre_Testing - INFO - Device Bios Version:STS-1000 R1.0
+2016-12-12 18:17:58,814 - Pre_Testing - INFO - Device recovery image:LileeRecovery_3.3_build37
+2016-12-12 18:17:58,814 - Pre_Testing - INFO - Device build image:LileeOS_3.3_build46
+2016-12-12 18:18:05,866 - Pre_Testing.ssh - INFO - u[Jp[Jd[Ja[Jt[Je[J [Jt[Je[Jr[Jm[Ji[Jn[Ja[Jl[J [Jp[Ja[Jg[Ji[Jn[Jg[J [Jd[Ji[Js[Ja[Jb[Jl[Je[J
+localhost.localdomain > [J
+2016-12-12 18:18:05,866 - Pre_Testing - INFO - [Pretesting_Poe]Starting
+2016-12-12 18:18:05,867 - Pre_Testing - INFO - [Pretesting_Poe][show poe budget] starting
+2016-12-12 18:18:17,920 - Pre_Testing - INFO - [Pretesting_Poe][show poe budget] check Oper. Limit: 61.6 watts result :False
+2016-12-12 18:18:17,922 - Pre_Testing - INFO - [Pretesting_Poe][show poe budget] check Oper. Limit: 61.6 watts error :show poe budget
+=Admin. Limit: n/a               Oper. Limit: 51.0 watts       
+Allocated: 0.0 watts            Available: 51.0 watts
+>localhost.localdomain > 
+2016-12-12 18:18:17,922 - Pre_Testing - INFO - [Pretesting_GPS]Starting
+2016-12-12 18:18:17,922 - Pre_Testing - INFO - [Pretesting_GPS][show gps detail] starting
+2016-12-12 18:18:29,974 - Pre_Testing - INFO - [Pretesting_GPS][show gps detail] check Fix Quality : 3D | Latitude : 25(.*) | Longitude : 121(.*) result :False
+2016-12-12 18:18:29,974 - Pre_Testing - INFO - [Pretesting_GPS][show gps detail] check Fix Quality : 3D | Latitude : 25(.*) | Longitude : 121(.*) error :show gps detail
+=GPS status : Enabled                        Receive time : Unknown
+Number of Satellites : 0 / 10               Fix Quality : No Signal
+Horizontal DOP : 0.000000                   Latitude : 0.000000
+Longitude : 0.000000                        Altitude : 0.000000
+Direction : 0.000000                        Speed (m/s) : 0.000000
+Climb : 0.000000                            Accuracy Estimate (m) : 0.000000
+>localhost.localdomain > 
